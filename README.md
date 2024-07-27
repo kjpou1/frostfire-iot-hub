@@ -13,6 +13,14 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
       - [Configure Mosquitto](#configure-mosquitto)
       - [Configure Mosquitto (Example on Raspberry Pi 5)](#configure-mosquitto-example-on-raspberry-pi-5)
     - [Usage](#usage)
+  - [Sample `publisher.py`](#sample-publisherpy)
+  - [Sample `subscriber.py`](#sample-subscriberpy)
+  - [Topic Explanation: `iot/devices`](#topic-explanation-iotdevices)
+    - [Example Usage of the `iot/devices` Topic](#example-usage-of-the-iotdevices-topic)
+      - [Publisher](#publisher)
+      - [Subscriber](#subscriber)
+    - [Use Cases for `iot/devices`](#use-cases-for-iotdevices)
+    - [Hierarchical Topics](#hierarchical-topics)
     - [Running with Docker Compose](#running-with-docker-compose)
     - [Docker Troubleshooting](#docker-troubleshooting)
       - [Address Already in Use](#address-already-in-use)
@@ -20,8 +28,6 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
     - [Configuration](#configuration-1)
   - [Contributing](#contributing)
   - [License](#license)
-  - [Sample `publisher.py`](#sample-publisherpy)
-  - [Sample `subscriber.py`](#sample-subscriberpy)
 
 ## Features
 
@@ -178,6 +184,136 @@ net start mosquitto
    python run.py
    ```
 
+## Sample `publisher.py`
+
+```python
+import logging
+
+import paho.mqtt.client as mqtt
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# MQTT settings
+MQTT_BROKER = (
+    "localhost"  # Change this to the IP address or hostname of your Raspberry Pi
+)
+MQTT_PORT = 1883
+MQTT_TOPIC = "iot/devices"
+
+
+def main():
+    # Create an MQTT client instance
+    client = mqtt.Client()
+
+    # Connect to the MQTT broker
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+
+    # Publish a test message
+    message = "Hello from the publisher!"
+    client.publish(MQTT_TOPIC, message)
+    logger.info(f"Published message: {message} to topic: {MQTT_TOPIC}")
+
+    # Disconnect from the broker
+    client.disconnect()
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+## Sample `subscriber.py`
+
+```python
+import logging
+
+import paho.mqtt.client as mqtt
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# MQTT settings
+MQTT_BROKER = (
+    "localhost"  # Change this to the IP address or hostname of your Raspberry Pi
+)
+MQTT_PORT = 1883
+MQTT_TOPIC = "iot/devices"
+
+
+def on_connect(client, userdata, flags, rc):
+    """
+    Callback for when the client receives a CONNACK response from the server.
+    """
+    if rc == 0:
+        logger.info("Connected to MQTT broker.")
+        client.subscribe(MQTT_TOPIC)
+    else:
+        logger.error("Failed to connect, return code %d\n", rc)
+
+
+def on_message(client, userdata, msg):
+    """
+    Callback for when a PUBLISH message is received from the server.
+    """
+    logger.info(f"Received message: {msg.payload.decode()} on topic {msg.topic}")
+
+
+def main():
+    # Create an MQTT client instance
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    # Connect to the MQTT broker
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+
+    # Start the MQTT client loop
+    client.loop_forever()
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+## Topic Explanation: `iot/devices`
+
+In MQTT, topics are used to categorize messages and control who can see which messages. A topic is a hierarchical namespace that clients (both publishers and subscribers) use to exchange messages.
+
+### Example Usage of the `iot/devices` Topic
+
+#### Publisher
+
+When a device or a service publishes a message to the `iot/devices` topic, it might be sending sensor data, status updates, commands, or any other relevant information. For example, an IoT temperature sensor could publish temperature readings to this topic.
+
+
+#### Subscriber
+
+A subscriber to the `iot/devices` topic might be a monitoring service, a logging service, or another device that needs to respond to the data being published. For example, an IoT application might subscribe to this topic to display real-time sensor data on a dashboard.
+
+### Use Cases for `iot/devices`
+
+1. **Sensor Data**: Devices like temperature sensors, humidity sensors, or motion detectors publish their readings to the `iot/devices` topic.
+2. **Device Status**: Devices publish their status updates (e.g., online, offline, battery level).
+3. **Control Commands**: Commands to control devices (e.g., turn on a light, adjust a thermostat) can be published to this topic.
+4. **Alerts and Notifications**: Alerts from devices (e.g., threshold breaches) can be published to notify subscribers.
+
+### Hierarchical Topics
+
+The topic structure `iot/devices` can be further extended to create a hierarchical namespace. For example:
+- `iot/devices/temperature`: For temperature sensor readings.
+- `iot/devices/humidity`: For humidity sensor readings.
+- `iot/devices/device1`: For messages from a specific device.
+
+This hierarchical structuring allows more granular control and filtering of messages.
+
 ### Running with Docker Compose
 
 You can set up and run the Frostfire IoT Hub with Mosquitto MQTT broker using Docker Compose. Follow these steps:
@@ -332,102 +468,3 @@ We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Sample `publisher.py`
-
-```python
-import logging
-
-import paho.mqtt.client as mqtt
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-# MQTT settings
-MQTT_BROKER = (
-    "localhost"  # Change this to the IP address or hostname of your Raspberry Pi
-)
-MQTT_PORT = 1883
-MQTT_TOPIC = "iot/devices"
-
-
-def main():
-    # Create an MQTT client instance
-    client = mqtt.Client()
-
-    # Connect to the MQTT broker
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
-
-    # Publish a test message
-    message = "Hello from the publisher!"
-    client.publish(MQTT_TOPIC, message)
-    logger.info(f"Published message: {message} to topic: {MQTT_TOPIC}")
-
-    # Disconnect from the broker
-    client.disconnect()
-
-
-if __name__ == "__main__":
-    main()
-
-```
-
-## Sample `subscriber.py`
-
-```python
-import logging
-
-import paho.mqtt.client as mqtt
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-# MQTT settings
-MQTT_BROKER = (
-    "localhost"  # Change this to the IP address or hostname of your Raspberry Pi
-)
-MQTT_PORT = 1883
-MQTT_TOPIC = "iot/devices"
-
-
-def on_connect(client, userdata, flags, rc):
-    """
-    Callback for when the client receives a CONNACK response from the server.
-    """
-    if rc == 0:
-        logger.info("Connected to MQTT broker.")
-        client.subscribe(MQTT_TOPIC)
-    else:
-        logger.error("Failed to connect, return code %d\n", rc)
-
-
-def on_message(client, userdata, msg):
-    """
-    Callback for when a PUBLISH message is received from the server.
-    """
-    logger.info(f"Received message: {msg.payload.decode()} on topic {msg.topic}")
-
-
-def main():
-    # Create an MQTT client instance
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-
-    # Connect to the MQTT broker
-    client.connect(MQTT_BROKER, MQTT_PORT, 60)
-
-    # Start the MQTT client loop
-    client.loop_forever()
-
-
-if __name__ == "__main__":
-    main()
-
-```
