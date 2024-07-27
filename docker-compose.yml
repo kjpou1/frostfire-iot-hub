@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mqtt-broker:
+    build:
+      context: .
+      dockerfile: Dockerfile.mosquitto
+    ports:
+      - "1883:1883"
+    # volumes:
+    #   - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  frostfire-iot-hub:
+    build:
+      context: .
+    depends_on:
+      - mqtt-broker
+    environment:
+      MQTT_BROKER: mqtt-broker
+      MQTT_PORT: 1883
+      MQTT_TOPIC: iot/devices
+    volumes:
+      - .:/app
+    command: python run.py
+    ports:
+      - "5000:5000"

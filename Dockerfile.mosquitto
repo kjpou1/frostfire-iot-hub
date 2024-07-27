@@ -1,0 +1,5 @@
+# Use the official Eclipse Mosquitto image from the Docker Hub
+FROM eclipse-mosquitto:latest
+
+# Expose the port Mosquitto runs on
+EXPOSE 1883

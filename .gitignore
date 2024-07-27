@@ -138,3 +138,4 @@ test_*
 
 # generated files
 data_files
+mosquitto/config/mosquitto.conf
