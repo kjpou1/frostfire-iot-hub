@@ -37,6 +37,8 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
 - Python 3.7+
 - MQTT broker (e.g., Mosquitto)
 - pip (Python package installer)
+- Docker (Optional)
+- Docker Compose (Optional)
 
 ### Installation
 
