@@ -186,7 +186,7 @@ You can set up and run the Frostfire IoT Hub with Mosquitto MQTT broker using Do
 
 2. Create the necessary Docker files (`Dockerfile` and `Dockerfile.mosquitto`) as described in the repository.
 
-3. Create the `docker-compose.yml` file in the root of the project.
+3. The `docker-compose.yml` file is already included in the root of the project.
 
 4. Run the following command to build and start the services:
    ```sh
