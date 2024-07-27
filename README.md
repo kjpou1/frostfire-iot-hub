@@ -225,6 +225,46 @@ If you encounter an error indicating that the address is already in use, it mean
    sudo docker compose up --build
    ```
 
+If stopping the existing process is not an option, you can run the MQTT broker on a different port:
+
+1. **Edit the `docker-compose.yml` File**
+
+   Change the port mapping for the MQTT broker to use a different external port, for example, `1884`:
+
+   ```yaml
+   version: '3.8'
+
+   services:
+     mqtt-broker:
+       image: eclipse-mosquitto:latest
+       ports:
+         - "1884:1883"
+
+     frostfire-iot-hub:
+       build:
+         context: .
+       environment:
+         MQTT_BROKER: mqtt-broker
+         MQTT_PORT: 1883
+         MQTT_TOPIC: iot/devices
+       depends_on:
+         - mqtt-broker
+       ports:
+         - "5000:5000"  # Adjust if needed, though this is just for example
+   ```
+
+2. **Update Environment Variables**
+
+   Ensure that your environment variables or configuration for the IoT hub points to the new port if necessary.
+
+3. **Retry Docker Compose**
+
+   Run the Docker Compose command again:
+
+   ```sh
+   sudo docker compose up --build
+   ```
+
 #### Allowing Remote Connections
 
 If the MQTT broker is only allowing local connections, you need to update the Mosquitto configuration to allow remote connections:
