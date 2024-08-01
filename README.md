@@ -26,6 +26,12 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
       - [Address Already in Use](#address-already-in-use)
       - [Allowing Remote Connections](#allowing-remote-connections)
     - [Configuration](#configuration-1)
+  - [Troubleshooting](#troubleshooting)
+    - [Connection Refused When Connecting to MQTT Broker](#connection-refused-when-connecting-to-mqtt-broker)
+    - [Address Already in Use](#address-already-in-use-1)
+    - [Mosquitto Fails to Start](#mosquitto-fails-to-start)
+    - [Docker Issues](#docker-issues)
+    - [Unable to Publish or Subscribe to Topics](#unable-to-publish-or-subscribe-to-topics)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -460,6 +466,93 @@ If the MQTT broker is only allowing local connections, you need to update the Mo
 ### Configuration
 
 All configuration settings are managed through environment variables. Refer to `app/config/config.py` for more details.
+
+
+## Troubleshooting
+
+In this section, we address common issues that users may encounter while setting up or running the Frostfire IoT Hub. If you face any issues not covered here, please refer to the [Contributing](#contributing) section for guidance on how to seek further assistance.
+
+### Connection Refused When Connecting to MQTT Broker
+
+If you encounter an error like `[Errno 111] Connection refused` when trying to connect to the MQTT broker, it could be due to the following reasons:
+
+- **MQTT Broker Not Running**: Ensure that the Mosquitto MQTT broker is running. You can check the status of the Mosquitto service using:
+
+  ```sh
+  sudo systemctl status mosquitto
+  ```
+
+  If it is not running, start the service:
+
+  ```sh
+  sudo systemctl start mosquitto
+  ```
+
+- **Incorrect Broker Address or Port**: Double-check that the `MQTT_BROKER` and `MQTT_PORT` in your configuration file or environment variables are correct.
+
+- **Network Issues**: Ensure that there is no firewall blocking the connection and that the broker is accessible from the device running the Frostfire IoT Hub.
+
+### Address Already in Use
+
+If you receive an "Address already in use" error, it indicates that the port (typically 1883 for MQTT) is already occupied by another process. Here's how to resolve it:
+
+1. **Identify the Process Using the Port**:
+
+   You can identify which process is using port `1883` with the following command:
+
+   ```sh
+   sudo lsof -i :1883
+   ```
+
+2. **Stop the Process**:
+
+   If the process is Mosquitto or another service that you no longer need running on that port, stop it with:
+
+   ```sh
+   sudo systemctl stop mosquitto
+   ```
+
+   Or, if it is another process, use:
+
+   ```sh
+   sudo kill <PID>
+   ```
+
+   Replace `<PID>` with the process ID obtained from the `lsof` command.
+
+3. **Restart the IoT Hub**:
+
+   After ensuring that the port is free, retry running your Frostfire IoT Hub or Docker Compose setup.
+
+### Mosquitto Fails to Start
+
+If the Mosquitto service fails to start or keeps stopping, this could be due to a configuration error or a permissions issue.
+
+- **Check Logs for Errors**: Review the Mosquitto logs for any error messages that could indicate what is going wrong:
+
+  ```sh
+  sudo journalctl -u mosquitto
+  ```
+
+- **Configuration Issues**: Ensure that your Mosquitto configuration file (e.g., `/etc/mosquitto/mosquitto.conf`) is correctly set up. Common issues include incorrect paths for files, missing directories, or syntax errors in the configuration.
+
+- **Permission Issues**: Ensure that the Mosquitto process has the necessary permissions to access the directories and files specified in the configuration.
+
+### Docker Issues
+
+For Docker-specific issues, please refer to the [Docker Troubleshooting](#docker-troubleshooting) section for guidance on common Docker-related problems.
+
+### Unable to Publish or Subscribe to Topics
+
+If you are unable to publish or subscribe to MQTT topics:
+
+- **Broker Connectivity**: Ensure that the client can connect to the broker. Use a simple MQTT client like `mosquitto_pub` or `mosquitto_sub` to test connectivity.
+
+- **Topic Configuration**: Verify that you are using the correct topic in your configuration. Ensure that both the publisher and subscriber are using the exact same topic name.
+
+- **Firewall or Security Settings**: Check if there are any firewall rules or security settings that might be blocking MQTT traffic.
+
+If these steps do not resolve your issue, please consult the [Contributing](#contributing) section for further assistance or consider filing an issue on the project's GitHub page.
 
 ## Contributing
 
