@@ -137,5 +137,12 @@ cython_debug/
 test_*
 
 # generated files
+.DS_Store
 data_files
 mosquitto/config/mosquitto.conf
+self-signed-certificate-LU.sh
+letsencrypt/my_domain
+ssl
+mosquitto/letscerts
+csr-ssl
+app/resources/api_keys.txt
