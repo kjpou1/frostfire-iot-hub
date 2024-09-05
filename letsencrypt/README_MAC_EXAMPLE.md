@@ -1,7 +1,3 @@
-Here's an updated README markdown file that includes a detailed guide for using the DNS-01 challenge with Certbot, based on your provided example run. The DNS-01 challenge is useful for scenarios where the server is not publicly accessible over HTTP or when issuing wildcard certificates.
-
----
-
 ## README: Let's Encrypt Certificate Setup Scripts
 
 This repository contains two Bash scripts for setting up Let's Encrypt SSL certificates using Certbot on different systems:
