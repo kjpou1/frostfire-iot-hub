@@ -1,3 +1,7 @@
+HOST=127.0.0.1    # Bind only to localhost in development
+PORT=8080         # Use port 8080 in development
+SSL_KEYFILE=ssl/private/insecure.key
+SSL_CERTFILE=ssl/certs/insecure.pem
 MQTT_BROKER=mqtt.example.com
 MQTT_PORT=1883
 MQTT_TOPIC=iot/devices
