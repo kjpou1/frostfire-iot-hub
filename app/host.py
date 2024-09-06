@@ -1,3 +1,5 @@
+# app/host.py
+
 import asyncio
 import base64
 import json
@@ -21,6 +23,15 @@ class Host:
         self.config = Config()
         self.logger = logging.getLogger(__name__)
 
+        # Access the configuration via properties
+        self.host = self.config.HOST
+        self.port = self.config.PORT
+        self.mqtt_broker = self.config.MQTT_BROKER
+        self.mqtt_port = self.config.MQTT_PORT
+        self.mqtt_topic = self.config.MQTT_TOPIC
+        self.ssl_keyfile = self.config.SSL_KEYFILE
+        self.ssl_certfile = self.config.SSL_CERTFILE
+        
         # MQTT client setup
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
@@ -36,7 +47,8 @@ class Host:
         """
         if rc == 0:
             self.logger.info("Connected to MQTT broker.")
-            self.client.subscribe(self.config.MQTT_TOPIC)
+            self.client.subscribe(self.mqtt_topic)
+            self.logger.info("Subscribed to: %s.", self.mqtt_topic)
         else:
             self.logger.error("Failed to connect, return code %d\n", rc)
 
@@ -158,11 +170,14 @@ class Host:
         """
         self.logger.info("Starting host process.")
 
-        # Connect to MQTT broker
-        self.client.connect(self.config.MQTT_BROKER, self.config.MQTT_PORT, 60)
+        try:
+            # Connect to MQTT broker
+            self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
 
-        # Start the MQTT loop
-        self.client.loop_start()
+            # Start the MQTT loop
+            self.client.loop_start()
+        except Exception as e:
+            logging.error(f"Error connecting to MQTT Broker: {e}")
 
         # Start FastAPI server
         fastapi_task = asyncio.create_task(self.start_fastapi())
@@ -184,17 +199,11 @@ class Host:
         """
         config = uvicorn.Config(
             self.app,
-            host="0.0.0.0",
-            port=8083,
-            log_level="debug",
-            # ssl_keyfile="letscerts/mosquitto.key",  # Path to your SSL key file
-            # ssl_certfile="letscerts/mosquitto.crt",  # Path to your SSL certificate file
-            # ssl_keyfile="/etc/letsencrypt/live/hicsvntdracons.xyz/privkey.pem",  # Path to your private key file
-            # ssl_certfile="/etc/letsencrypt/live/hicsvntdracons.xyz/fullchain.pem",  # Path to your full chain certificate file
-            ssl_keyfile="mosquitto/letscerts/privkey.pem",  # Path to your private key file
-            ssl_certfile="mosquitto/letscerts/fullchain.pem",  # Path to your full chain certificate file
-            # ssl_keyfile="ssl/private/insecure.key",  # Path to your private key file
-            # ssl_certfile="ssl/certs/insecure.pem",  # Path to your full chain certificate file
+            host=self.host,
+            port=self.port,
+            log_level="info",
+            ssl_keyfile=self.config.SSL_KEYFILE,   # Use the parameterized SSL key file
+            ssl_certfile=self.config.SSL_CERTFILE, # Use the parameterized SSL certificate file
         )
         server = uvicorn.Server(config)
         await server.serve()
@@ -218,8 +227,32 @@ async def main_async():
     except Exception as e:
         logger.error("Unexpected error: %s", e)
 
+    async def start_fastapi2(self):
+        """
+        Run the FastAPI application using Uvicorn.
+        """
+        config = uvicorn.Config(
+            self.app,
+            host="0.0.0.0",
+            port=8084,
+            log_level="debug",
+            # ssl_keyfile="letscerts/mosquitto.key",  # Path to your SSL key file
+            # ssl_certfile="letscerts/mosquitto.crt",  # Path to your SSL certificate file
+            ssl_keyfile="/etc/letsencrypt/live/hicsvntdracons.xyz/privkey.pem",  # Path to your private key file
+            ssl_certfile="/etc/letsencrypt/live/hicsvntdracons.xyz/fullchain.pem",  # Path to your full chain certificate file
+            # ssl_keyfile="mosquitto/letscerts/privkey.pem",  # Path to your private key file
+            # ssl_certfile="mosquitto/letscerts/fullchain.pem",  # Path to your full chain certificate file
+            # ssl_keyfile="ssl/private/insecure.key",  # Path to your private key file
+            # ssl_certfile="ssl/certs/insecure.pem",  # Path to your full chain certificate file
+        )
+        server = uvicorn.Server(config)
+        await server.serve()
+
+
 def main():
     asyncio.run(main_async())
+
+
 
 # if __name__ == "__main__":
 #     # Setup logging configuration
@@ -227,5 +260,5 @@ def main():
 #         level=logging.INFO,
 #         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 #     )
-
+# 
 #     main()
