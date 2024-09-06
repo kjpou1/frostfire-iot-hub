@@ -1,5 +1,11 @@
 # Use the official Eclipse Mosquitto image from the Docker Hub
 FROM eclipse-mosquitto:latest
 
-# Expose the port Mosquitto runs on
+# Copy SSL certificates and keys into the container
+# COPY ./ssl/certs/insecure.pem /mosquitto/config/certs/mosquitto.crt
+# COPY ./ssl/private/insecure.key /mosquitto/config/certs/mosquitto.key
+# COPY ./ssl/dhparam2048.pem /mosquitto/config/certs/dhparam.pem
+
+# Expose the MQTT and WebSocket ports
 EXPOSE 1883
+EXPOSE 8083
