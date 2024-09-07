@@ -23,7 +23,10 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
     - [Hierarchical Topics](#hierarchical-topics)
     - [Running with Docker Compose](#running-with-docker-compose)
     - [Docker Troubleshooting](#docker-troubleshooting)
-      - [Address Already in Use](#address-already-in-use)
+    - [Address Already in Use](#address-already-in-use)
+      - [Steps to Resolve:](#steps-to-resolve)
+      - [On Raspberry Pi (Linux-based system):](#on-raspberry-pi-linux-based-system)
+      - [On macOS (using Homebrew):](#on-macos-using-homebrew)
       - [Allowing Remote Connections](#allowing-remote-connections)
     - [Configuration](#configuration-1)
   - [Troubleshooting](#troubleshooting)
@@ -339,73 +342,113 @@ You can set up and run the Frostfire IoT Hub with Mosquitto MQTT broker using Do
 
 ### Docker Troubleshooting
 
-#### Address Already in Use
+### Address Already in Use
 
-If you encounter an error indicating that the address is already in use, it means that another process is using the port. Follow these steps to resolve the issue:
+If you encounter an error indicating that the address is already in use, it means that another process is currently using the port. A typical error message might look like this:
 
-1. **Identify the Process Using the Port**
+```
+Error response from daemon: driver failed programming external connectivity on endpoint frostfire_mqtt-broker_container (dc0beae531f9cab78c037f10853d59ddebe63746bf7d61b35b6e26970b472b82): failed to bind port 0.0.0.0:1883/tcp: Error starting userland proxy: listen tcp4 0.0.0.0:1883: bind: address already in use
+```
 
-   You can identify which process is using port `1883` with the following command:
+This typically happens when a service like Mosquitto or another MQTT broker is already running on the system and has bound to port `1883`. Follow the steps below to resolve the issue:
+
+#### Steps to Resolve:
+
+1. **Identify the Process Using the Port**:
+
+   To identify which process is using port `1883`, run the following command:
 
    ```sh
    sudo lsof -i -P -n | grep LISTEN | grep 1883
    ```
 
-2. **Stop the Process**
+   This will show the process ID (PID) of the service currently using that port.
 
-   If the process is Mosquitto, you can stop it with:
+2. **Stop the Conflicting MQTT Service (Mosquitto)**:
+
+   If Mosquitto is running and you don't need it to auto-start at boot, follow these steps to stop the service on both macOS and Raspberry Pi.
+
+   #### On Raspberry Pi (Linux-based system):
+
+   - **Stop the Mosquitto service**:
+
+     ```sh
+     sudo systemctl stop mosquitto
+     ```
+
+   - **Disable the Mosquitto service from starting at boot**:
+
+     ```sh
+     sudo systemctl disable mosquitto
+     ```
+
+   - **Check the status** to ensure it is not running:
+
+     ```sh
+     sudo systemctl status mosquitto
+     ```
+
+   #### On macOS (using Homebrew):
+
+   - **Stop the Mosquitto service**:
+
+     ```sh
+     brew services stop mosquitto
+     ```
+
+   - **Remove Mosquitto from auto-start on boot**:
+
+     ```sh
+     brew services remove mosquitto
+     ```
+
+   - **Check the status** to ensure it is not running:
+
+     ```sh
+     brew services list
+     ```
+
+3. **Restart the Docker Container**:
+
+   After ensuring that Mosquitto is not running, retry running your Docker Compose setup:
 
    ```sh
-   sudo systemctl stop mosquitto
+   sudo docker-compose up --build
    ```
 
-3. **Retry Docker Compose**
+4. **Update Mosquitto Configuration (Optional)**:
 
-   After stopping the existing service, try running the Docker Compose command again:
+   If you want to keep Mosquitto running on the system but not interfere with the Docker container, you can change the port Mosquitto listens on. Edit the Mosquitto configuration file (typically `/etc/mosquitto/mosquitto.conf`) and change the port:
+
+   ```conf
+   listener 1884
+   ```
+
+   After editing the configuration, restart Mosquitto:
 
    ```sh
-   sudo docker compose up --build
+   sudo systemctl restart mosquitto
    ```
 
-If stopping the existing process is not an option, you can run the MQTT broker on a different port:
+5. **Run Docker Compose Again**:
 
-1. **Edit the `docker-compose.yml` File**
-
-   Change the port mapping for the MQTT broker to use a different external port, for example, `1884`:
+   If stopping the existing process is not an option, you can run the MQTT broker in Docker on a different port. Update the `docker-compose.yml` to use a different external port:
 
    ```yaml
-   version: '3.8'
-
    services:
      mqtt-broker:
-       image: eclipse-mosquitto:latest
        ports:
          - "1884:1883"
-
-     frostfire-iot-hub:
-       build:
-         context: .
-       environment:
-         MQTT_BROKER: mqtt-broker
-         MQTT_PORT: 1883
-         MQTT_TOPIC: iot/devices
-       depends_on:
-         - mqtt-broker
-       ports:
-         - "5000:5000"  # Adjust if needed, though this is just for example
    ```
 
-2. **Update Environment Variables**
-
-   Ensure that your environment variables or configuration for the IoT hub points to the new port if necessary.
-
-3. **Retry Docker Compose**
-
-   Run the Docker Compose command again:
+   After modifying the `docker-compose.yml`, restart Docker Compose:
 
    ```sh
-   sudo docker compose up --build
+   sudo docker-compose up --build
    ```
+
+By following these steps, you can avoid port conflicts and ensure that the Docker container can bind to port `1883` without interference from other services.
+
 
 #### Allowing Remote Connections
 
