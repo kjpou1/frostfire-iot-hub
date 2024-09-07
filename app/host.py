@@ -136,11 +136,14 @@ class Host:
 
         try:
             # Start MQTT connection asynchronously
-            self.mqtt_service.connect()
-            self.logger.info("Waiting for MQTT connection...")
+            #self.mqtt_service.connect()
+            await self.mqtt_service.async_connect()
 
             # Wait for MQTT connection asynchronously
             await self.mqtt_service.wait_for_connection()
+
+            # Start the heartbeat task
+            heartbeat_task = asyncio.create_task(self.mqtt_service.heartbeat())
 
             # Start FastAPI server as a task
             fastapi_task = asyncio.create_task(self.start_fastapi())

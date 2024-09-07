@@ -2,87 +2,83 @@ import asyncio
 import logging
 
 import paho.mqtt.client as mqtt
-
+import time
 from app.config.config import Config
 
 
 class MqttService:
-    def __init__(self):
-        # Initialize logger for the class.
-        # Using logging.getLogger(__name__) ties the logger to the module's name,
-        # which integrates with Python's logging hierarchy. This allows granular
-        # control of logging at the module level.
+    def __init__(self, heartbeat_interval: int = 10):
+        """
+        Initialize the MQTT service with a heartbeat interval for connection checks.
+
+        :param heartbeat_interval: Interval in seconds for heartbeat status checks.
+        """
         self.logger = logging.getLogger(__name__)
-        # Initialize _is_initialized to False to avoid accessing it before it's defined
-        self._is_initialized = False
 
-        # Ensure that the class is only initialized once
-        if not self._is_initialized:
-            config = Config()  # Load configuration
-            self.client_id = "mqtt_service_singleton"
-            self.broker = config.MQTT_BROKER
-            self.port = config.MQTT_PORT
-            self.topic = config.MQTT_TOPIC
+        # Initialize the MQTT client and connection parameters
+        self.client_id = "mqtt_service_singleton"
+        config = Config()  # Load configuration
+        self.broker = config.MQTT_BROKER
+        self.port = config.MQTT_PORT
+        self.topic = config.MQTT_TOPIC
 
-            # Create an MQTT client
-            self.client = mqtt.Client(client_id=self.client_id)
-            self.client.on_connect = self.on_connect
-            self.client.on_message = self.on_message
-            self.client.on_disconnect = self.on_disconnect
+        # Create an MQTT client
+        self.client = mqtt.Client(client_id=self.client_id)
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message  # Set the on_message callback
+        self.client.on_disconnect = self.on_disconnect
 
-            # Get the current asyncio event loop or create one if necessary
-            try:
-                self.loop = asyncio.get_running_loop()
-            except RuntimeError:  # No running loop
-                self.loop = asyncio.get_event_loop()
+        # Event loop and connection status
+        try:
+            self.loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self.loop = asyncio.get_event_loop()
 
-            # Async event to track connection status
-            self.connected_event = asyncio.Event()
-            self._is_initialized = True
+        self.connected_event = asyncio.Event()
+        self._is_connected = False  # Track connection status
+        self._initial_connection_attempt = False  # Track if we've tried the initial connection
+        self.heartbeat_interval = heartbeat_interval  # Heartbeat check interval in seconds
 
     def connect(self) -> None:
-        """
-        Initiate a connection to the MQTT broker and start the MQTT loop.
-        """
-        self.logger.info("Connecting to MQTT broker asynchronously.")
-        self.loop.run_in_executor(None, self._connect_and_loop)
-
-    def _connect_and_loop(self) -> None:
-        """
-        Private method to handle the connection and start the MQTT loop.
-        """
+        """Synchronous connect method."""
+        self.logger.info("Connecting to MQTT broker synchronously.")
         try:
             self.client.connect(self.broker, self.port)
-            self.client.loop_start()  # Start the MQTT loop in a background thread
+            self.client.loop_start()
+            self.logger.info("Synchronous connection attempt made.")
         except Exception as e:
-            self.logger.error("Failed to connect to MQTT broker: %s", e)
+            self.logger.error("Synchronous connection failed: %s", e)
 
+    async def async_connect(self) -> None:
+        """Asynchronous method to connect to the MQTT broker."""
+        self.logger.info("Asynchronously connecting to MQTT broker...")
+
+        try:
+            # Use asyncio.to_thread to run the connect method in a non-blocking manner
+            await asyncio.to_thread(self.client.connect, self.broker, self.port)
+            self.client.loop_start()  # Start the MQTT client loop after connecting
+            self.logger.info("Asynchronous connection attempt made. Waiting for broker confirmation...")
+        except Exception as e:
+            self.logger.error("Async connection failed: %s", e)
+                
     def on_connect(self, client, userdata, flags, rc) -> None:
-        """
-        Callback method when the client successfully connects to the broker.
-        """
+        """Callback when the client connects to the broker."""
         if rc == 0:
             self.logger.info("Connected to MQTT broker.")
             self.client.subscribe(self.topic)
             self.logger.info("Subscribed to topic: %s", self.topic)
-            # Set the asyncio event in the current event loop
+            # Set the initial connection attempt flag to True after the first connection
+            self._initial_connection_attempt = True            
             asyncio.run_coroutine_threadsafe(self._set_connected_event(), self.loop)
         else:
             self.logger.error("Failed to connect, return code %d", rc)
 
-    async def _set_connected_event(self) -> None:
-        """
-        Set the asyncio event to indicate that the connection is established.
-        """
-        self.connected_event.set()
-
     def on_disconnect(self, client, userdata, rc) -> None:
-        """
-        Callback when the client disconnects from the broker.
-        """
+        """Callback when the client disconnects from the broker."""
         self.logger.warning("Disconnected from MQTT broker. Return code: %d", rc)
-        self.connected_event.clear()
-
+        self._is_connected = False  # Set connection status to False
+        self.connected_event.clear()  # Clear the connection event
+        
     def on_message(self, client, userdata, message) -> None:
         """
         Callback when a message is received on a subscribed topic.
@@ -100,28 +96,66 @@ class MqttService:
         self.logger.info("Processing message: %s", message.payload.decode("utf-8"))
         await asyncio.sleep(1)  # Simulate async processing (replace with actual logic)
 
+    async def _set_connected_event(self) -> None:
+        """Set the connection event when connected."""
+        self._is_connected = True  # Mark as connected
+        self.connected_event.set()
+
+    async def heartbeat(self) -> None:
+        """
+        Heartbeat task to check the connection status and attempt reconnection if disconnected.
+        """
+        while True:
+            if not self._is_connected:
+                self.logger.warning("MQTT client is not connected. Attempting to connect/reconnect...")
+
+                try:
+                    # Check if the initial connection has never been made
+                    if not self._initial_connection_attempt:
+                        self.logger.info("Initial connection attempt failed. Trying to connect again...")
+                        self.connect()
+                    else:
+                        # If initial connection succeeded, attempt to reconnect
+                        self.logger.info("Attempting to reconnect...")
+                        self.client.reconnect()
+
+                    self.logger.info("Connection/reconnection attempt made. Waiting for broker confirmation...")
+                except Exception as e:
+                    self.logger.error("Connection/reconnection failed: %s", e)
+            else:
+                self.logger.info("MQTT client is healthy and connected.")
+
+            # Wait for the specified heartbeat interval before the next check
+            await asyncio.sleep(self.heartbeat_interval)
+            
     async def publish(self, topic: str, payload: dict) -> None:
-        """
-        Asynchronously publish a message to the MQTT broker.
-        """
+        """Publish a message to a topic."""
         self.logger.info("Publishing message to topic %s", topic)
         result = await asyncio.to_thread(self.client.publish, topic, payload)
+
         if result.rc == mqtt.MQTT_ERR_SUCCESS:
             self.logger.info("Message published to topic %s", topic)
         else:
             self.logger.error("Failed to publish message. Return code %d", result.rc)
 
-    async def wait_for_connection(self) -> None:
+    async def wait_for_connection(self, timeout: int = 10) -> None:
         """
-        Wait until the connection to the MQTT broker is established.
+        Wait until the connection to the MQTT broker is established or timeout occurs.
+
+        :param timeout: The maximum time to wait for a connection, in seconds.
         """
-        self.logger.info("Waiting for MQTT connection...")
-        await self.connected_event.wait()
+        self.logger.info("Waiting for MQTT connection with timeout of %d seconds...", timeout)
+        try:
+            await asyncio.wait_for(self.connected_event.wait(), timeout=timeout)
+            if self._is_connected:
+                self.logger.info("Successfully connected to the MQTT broker.")
+            else:
+                self.logger.warning("Failed to connect within the timeout period.")
+        except asyncio.TimeoutError:
+            self.logger.warning("MQTT connection attempt timed out after %d seconds.", timeout)
 
     async def disconnect(self) -> None:
-        """
-        Disconnect the client from the broker.
-        """
+        """Disconnect from the broker."""
         self.client.loop_stop()
         self.client.disconnect()
         self.logger.info("Disconnected from MQTT broker.")
