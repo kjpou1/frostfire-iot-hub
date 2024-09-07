@@ -1,15 +1,13 @@
-# app/host.py
-
 import asyncio
 import base64
 import json
 import logging
 import os
-import paho.mqtt.client as mqtt
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from app.config import Config
 from app.models import CommandLineArgs
+from app.services.mqtt_service import MqttService  # Import the MqttService singleton
 
 class Host:
     def __init__(self, args: CommandLineArgs):
@@ -26,37 +24,13 @@ class Host:
         # Access the configuration via properties
         self.host = self.config.HOST
         self.port = self.config.PORT
-        self.mqtt_broker = self.config.MQTT_BROKER
-        self.mqtt_port = self.config.MQTT_PORT
-        self.mqtt_topic = self.config.MQTT_TOPIC
-        self.ssl_keyfile = self.config.SSL_KEYFILE
-        self.ssl_certfile = self.config.SSL_CERTFILE
-        
-        # MQTT client setup
-        self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
-        #self.client.on_message = self.on_message
 
         # Initialize FastAPI
         self.app = FastAPI()
         self.setup_routes()
 
-    def on_connect(self, client, userdata, flags, rc):
-        """
-        Callback for when the client receives a CONNACK response from the server.
-        """
-        if rc == 0:
-            self.logger.info("Connected to MQTT broker.")
-            self.client.subscribe(self.mqtt_topic)
-            self.logger.info("Subscribed to: %s.", self.mqtt_topic)
-        else:
-            self.logger.error("Failed to connect, return code %d\n", rc)
-
-    # def on_message(self, client, userdata, msg):
-    #     """
-    #     Callback for when a PUBLISH message is received from the server.
-    #     """
-    #     self.logger.info(f"Received message: {msg.payload.decode()} on topic {msg.topic}")
+        # Initialize MqttService (Singleton)
+        self.mqtt_service = MqttService()
 
     def setup_routes(self):
         """
@@ -68,13 +42,9 @@ class Host:
 
         @self.app.get("/mqtt/status")
         async def mqtt_status():
-            return {
-                "status": (
-                    "connected"
-                    if self.client.is_connected()
-                    else "disconnected"
-                )
-            }
+            # Use MqttService to check the connection status
+            status = "connected" if self.mqtt_service.client.is_connected() else "disconnected"
+            return {"status": status}
 
         @self.app.post("/topics/{url_encoded_topic_name:path}")
         async def mqtt_topics_publish(
@@ -87,13 +57,10 @@ class Host:
         ):
             # Check if the header exists
             if not x_amz_mqtt5_user_properties:
-                # Return 401 Unauthorized if the header is missing
                 raise HTTPException(status_code=401, detail="Not authorized")
 
             # Extract the full path from the request
             full_path = request.url.path
-
-            # Extract the topic part after '/topics/'
             topic = full_path.split("/topics/", 1)[-1]
 
             # Extract the raw body of the request
@@ -113,11 +80,11 @@ class Host:
                 None,
             )
             if not api_key or api_key not in self.load_api_keys():
-                # Return 401 Unauthorized if API_KEY is missing or not valid
                 raise HTTPException(status_code=401, detail="Not authorized")
 
-            # Publish the message to the MQTT topic with the specified QoS
-            self.client.publish(topic, message, qos, retain=retain)
+            # Use MqttService to publish the message to the MQTT topic
+            await self.mqtt_service.publish(topic, message)
+
             return {
                 "message": f"Message '{message}' published to topic '{topic}' with QoS {qos}."
             }
@@ -128,16 +95,12 @@ class Host:
         Decode a base64-encoded string and parse it into a JSON object.
         """
         try:
-            # Step 1: Decode from base64
             decoded_bytes = base64.b64decode(encoded_user_properties)
             decoded_string = decoded_bytes.decode("utf-8")
 
-            # Step 2: Check if the decoded string is a valid JSON format or needs further decoding
             if decoded_string.startswith('"') and decoded_string.endswith('"'):
-                # The string has an additional layer of quotes, indicating it needs further decoding
                 decoded_string = json.loads(decoded_string)
 
-            # Step 3: Parse the decoded string into a Python object (list or dictionary)
             user_properties_json = json.loads(decoded_string)
 
             return user_properties_json
@@ -166,32 +129,33 @@ class Host:
 
     async def run_async(self):
         """
-        Asynchronous method to perform the main logic.
+        Asynchronous method to start both MQTT and FastAPI server concurrently.
         """
         self.logger.info("Starting host process.")
+        fastapi_task = None  # Initialize fastapi_task to None
 
         try:
-            # Connect to MQTT broker
-            self.client.connect(self.mqtt_broker, self.mqtt_port, 60)
+            # Start MQTT connection asynchronously
+            self.mqtt_service.connect()
+            self.logger.info("Waiting for MQTT connection...")
 
-            # Start the MQTT loop
-            self.client.loop_start()
-        except Exception as e:
-            logging.error(f"Error connecting to MQTT Broker: {e}")
+            # Wait for MQTT connection asynchronously
+            await self.mqtt_service.wait_for_connection()
 
-        # Start FastAPI server
-        fastapi_task = asyncio.create_task(self.start_fastapi())
+            # Start FastAPI server as a task
+            fastapi_task = asyncio.create_task(self.start_fastapi())
 
-        try:
+            # Keep the process running until interrupted
             while True:
-                await asyncio.sleep(1)  # Keep the loop running
+                await asyncio.sleep(1)
+
         except asyncio.CancelledError:
             self.logger.info("Stopping host process.")
         finally:
-            fastapi_task.cancel()
-            await fastapi_task
-            self.client.loop_stop()
-            self.client.disconnect()
+            if fastapi_task:  # Check if fastapi_task is initialized
+                fastapi_task.cancel()
+                await fastapi_task
+            await self.mqtt_service.disconnect()
 
     async def start_fastapi(self):
         """
@@ -202,8 +166,8 @@ class Host:
             host=self.host,
             port=self.port,
             log_level="info",
-            ssl_keyfile=self.config.SSL_KEYFILE,   # Use the parameterized SSL key file
-            ssl_certfile=self.config.SSL_CERTFILE, # Use the parameterized SSL certificate file
+            ssl_keyfile=self.config.SSL_KEYFILE,
+            ssl_certfile=self.config.SSL_CERTFILE,
         )
         server = uvicorn.Server(config)
         await server.serve()
@@ -214,51 +178,19 @@ class Host:
         """
         return asyncio.run(self.run_async())
 
+
 async def main_async():
     logger = logging.getLogger(__name__)
     try:
         # Create an instance of Host with parsed arguments
         args = CommandLineArgs()  # Ensure CommandLineArgs is properly initialized
         instance = Host(args)
-        # Run the async main function with the parsed arguments
         await instance.run_async()
     except ValueError as e:
         logger.error("Error: %s", e)
     except Exception as e:
         logger.error("Unexpected error: %s", e)
 
-    async def start_fastapi2(self):
-        """
-        Run the FastAPI application using Uvicorn.
-        """
-        config = uvicorn.Config(
-            self.app,
-            host="0.0.0.0",
-            port=8084,
-            log_level="debug",
-            # ssl_keyfile="letscerts/mosquitto.key",  # Path to your SSL key file
-            # ssl_certfile="letscerts/mosquitto.crt",  # Path to your SSL certificate file
-            ssl_keyfile="/etc/letsencrypt/live/hicsvntdracons.xyz/privkey.pem",  # Path to your private key file
-            ssl_certfile="/etc/letsencrypt/live/hicsvntdracons.xyz/fullchain.pem",  # Path to your full chain certificate file
-            # ssl_keyfile="mosquitto/letscerts/privkey.pem",  # Path to your private key file
-            # ssl_certfile="mosquitto/letscerts/fullchain.pem",  # Path to your full chain certificate file
-            # ssl_keyfile="ssl/private/insecure.key",  # Path to your private key file
-            # ssl_certfile="ssl/certs/insecure.pem",  # Path to your full chain certificate file
-        )
-        server = uvicorn.Server(config)
-        await server.serve()
-
 
 def main():
     asyncio.run(main_async())
-
-
-
-# if __name__ == "__main__":
-#     # Setup logging configuration
-#     logging.basicConfig(
-#         level=logging.INFO,
-#         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-#     )
-# 
-#     main()
