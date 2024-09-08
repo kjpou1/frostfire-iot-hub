@@ -43,23 +43,25 @@ class IotHandler:
         """
         plugins = []
 
-        for module_name in os.listdir(self.plugin_dir):
-            if module_name.endswith('.py') and not module_name.startswith('__'):
-                # Import module dynamically
-                module_path = f"app.plugins.{module_name[:-3]}"
-                try:
-                    module = importlib.import_module(module_path)
+        for root, dirs, files in os.walk(self.plugin_dir):  # Traverse the plugin directory recursively
+            for file_name in files:
+                if file_name.endswith('.py') and not file_name.startswith('__'):
+                    # Construct the module path by converting file path to a module path format
+                    relative_path = os.path.relpath(root, self.plugin_dir).replace(os.sep, ".")
+                    module_path = f"app.plugins.{relative_path}.{file_name[:-3]}" if relative_path != '.' else f"app.plugins.{file_name[:-3]}"
+                    
+                    try:
+                        module = importlib.import_module(module_path)
+                        # Find all classes in the module that implement the IotPlugin interface
+                        for name, obj in inspect.getmembers(module, inspect.isclass):
+                            if issubclass(obj, IotPlugin) and obj is not IotPlugin:
+                                plugin_instance = obj()  # Instantiate plugin
+                                self.logger.debug(f"Loaded plugin: {name}")
+                                await plugin_instance.initialize()  # Call initialize on the plugin
+                                plugins.append(plugin_instance)
+                    except Exception as e:
+                        self.logger.error(f"Error loading plugin from {module_path}: {e}")
 
-                    # Find all classes in the module that implement the IotPlugin interface
-                    for name, obj in inspect.getmembers(module, inspect.isclass):
-                        if issubclass(obj, IotPlugin) and obj is not IotPlugin:
-                            plugin_instance = obj()  # Instantiate plugin
-                            await plugin_instance.initialize()  # Call initialize on the plugin
-                            plugins.append(plugin_instance)
-                            # Log the plugin that has been loaded
-                            self.logger.debug(f"Loaded plugin: {name}")
-                except Exception as e:
-                    self.logger.error(f"Error loading plugin {module_name}: {e}")
 
         return plugins
 
@@ -100,15 +102,17 @@ class IotHandler:
 
         self.logger.info("Received message on topic %s: %s", topic, payload)
 
-        # Loop through each plugin and find the one that can handle this topic
+        # Loop through each plugin and find all that can handle this topic
+        handled = False
         for plugin in self.plugins:
             if plugin.can_handle_topic(topic):
                 self.logger.info(f"Delegating message on topic {topic} to plugin {plugin.__class__.__name__}")
                 await plugin.process_message(topic, payload)
-                break
-        else:
+                handled = True
+
+        if not handled:
             self.logger.warning(f"No plugin found to handle topic: {topic}")
-        
+            
     
     async def run_async(self):
         """

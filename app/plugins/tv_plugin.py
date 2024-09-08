@@ -18,7 +18,8 @@ class TVPlugin(IotPlugin):
         Determine if this plugin can handle the given topic.
         We assume TV-related topics follow a pattern like 'domus/devices/tv/#'
         """
-        return "domus/devices/tv/" in topic
+        #return "domus/devices/tv/" in topic
+        return False
 
     def get_topics(self) -> list:
         """

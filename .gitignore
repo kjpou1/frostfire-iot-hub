@@ -146,3 +146,4 @@ ssl
 mosquitto/letscerts
 csr-ssl
 app/resources/api_keys.txt
+app/plugins/bravia/config.json

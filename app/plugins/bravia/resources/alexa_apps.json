@@ -1,0 +1,428 @@
+{
+    "apps": [
+        {
+            "name": "A&E",
+            "identifier": "amzn1.alexa-ask-target.app.80711"
+        },
+        {
+            "name": "ABC",
+            "identifier": "amzn1.alexa-ask-target.app.27025"
+        },
+        {
+            "name": "3ABN",
+            "identifier": "amzn1.alexa-ask-target.app.37201"
+        },
+        {
+            "name": "3D Go",
+            "identifier": "amzn1.alexa-ask-target.app.22107"
+        },
+        {
+            "name": "4 on Demand",
+            "identifier": "amzn1.alexa-ask-target.app.18267"
+        },
+        {
+            "name": "6play",
+            "identifier": "amzn1.alexa-ask-target.app.53194"
+        },
+        {
+            "name": "9Now",
+            "identifier": "amzn1.alexa-ask-target.app.19406"
+        },
+        {
+            "name": "édu Kids",
+            "identifier": "amzn1.alexa-ask-target.app.23810"
+        },
+        {
+            "name": "ひかりTV",
+            "identifier": "amzn1.alexa-ask-target.app.84722"
+        },
+        {
+            "name": "A3 Player",
+            "identifier": "amzn1.alexa-ask-target.app.66890"
+        },
+        {
+            "name": "ABC iView",
+            "identifier": "amzn1.alexa-ask-target.app.96322"
+        },
+        {
+            "name": "ABC Tek",
+            "identifier": "amzn1.alexa-ask-target.app.16971"
+        },
+        {
+            "name": "AbemaTV",
+            "identifier": "amzn1.alexa-ask-target.app.41309"
+        },
+        {
+            "name": "Absolute Radio",
+            "identifier": "amzn1.alexa-ask-target.app.19668"
+        },
+        {
+            "name": "AccuRadio",
+            "identifier": "amzn1.alexa-ask-target.app.81545"
+        },
+        {
+            "name": "AccuWeather - Weather for Life",
+            "identifier": "amzn1.alexa-ask-target.app.54002"
+        },
+        {
+            "name": "Acorn TV",
+            "identifier": "amzn1.alexa-ask-target.app.05011"
+        },
+        {
+            "name": "Adam Rippon",
+            "identifier": "amzn1.alexa-ask-target.app.10016"
+        },
+        {
+            "name": "Adult Swim",
+            "identifier": "amzn1.alexa-ask-target.app.53246"
+        },
+        {
+            "name": "Adventure 2 Learning",
+            "identifier": "amzn1.alexa-ask-target.app.10006"
+        },
+        {
+            "name": "Adventure Sports Network",
+            "identifier": "amzn1.alexa-ask-target.app.22737"
+        },
+        {
+            "name": "Adventure Sports TV",
+            "identifier": "amzn1.alexa-ask-target.app.58956"
+        },
+        {
+            "name": "AfrikaSTV - ASTV",
+            "identifier": "amzn1.alexa-ask-target.app.93909"
+        },
+        {
+            "name": "Afro Land TV",
+            "identifier": "amzn1.alexa-ask-target.app.80715"
+        },
+        {
+            "name": "Afterglow Configuration App",
+            "identifier": "amzn1.alexa-ask-target.app.55499"
+        },
+        {
+            "name": "AirServer Xbox Edition",
+            "identifier": "amzn1.alexa-ask-target.app.93540"
+        },
+        {
+            "name": "Al Jazeera",
+            "identifier": "amzn1.alexa-ask-target.app.58518"
+        },
+        {
+            "name": "Alexa Show Application",
+            "identifier": "amzn1.alexa-ask-target.app.72999"
+        },
+        {
+            "name": "Alien Shooter",
+            "identifier": "amzn1.alexa-ask-target.app.10849"
+        },
+        {
+            "name": "All 4",
+            "identifier": "amzn1.alexa-ask-target.app.56437"
+        },
+        {
+            "name": "Allconnect",
+            "identifier": "amzn1.alexa-ask-target.app.26247"
+        },
+        {
+            "name": "Allrecipes",
+            "identifier": "amzn1.alexa-ask-target.app.02002"
+        },
+        {
+            "name": "Altice One",
+            "identifier": "amzn1.alexa-ask-target.app.89194"
+        },
+        {
+            "name": "Amazon Alexa",
+            "identifier": "amzn1.alexa-ask-target.app.73751"
+        },
+        {
+            "name": "Amazon Music",
+            "identifier": "amzn1.alexa-ask-target.app.32470"
+        },
+        {
+            "name": "AMC",
+            "identifier": "amzn1.alexa-ask-target.app.90271"
+        },
+        {
+            "name": "Ameba TV",
+            "identifier": "amzn1.alexa-ask-target.app.24176"
+        },
+        {
+            "name": "anglais facilement",
+            "identifier": "amzn1.alexa-ask-target.app.23811"
+        },
+        {
+            "name": "Animal Planet LIVE",
+            "identifier": "amzn1.alexa-ask-target.app.42965"
+        },
+        {
+            "name": "Animation Time",
+            "identifier": "amzn1.alexa-ask-target.app.10021"
+        },
+        {
+            "name": "Anime Tube Pro",
+            "identifier": "amzn1.alexa-ask-target.app.72879"
+        },
+        {
+            "name": "Anime Tube Unlimited",
+            "identifier": "amzn1.alexa-ask-target.app.45567"
+        },
+        {
+            "name": "Annoying Orange",
+            "identifier": "amzn1.alexa-ask-target.app.23794"
+        },
+        {
+            "name": "ANTV",
+            "identifier": "amzn1.alexa-ask-target.app.43925"
+        },
+        {
+            "name": "Anyview Cast",
+            "identifier": "amzn1.alexa-ask-target.app.57906"
+        },
+        {
+            "name": "AOL Video",
+            "identifier": "amzn1.alexa-ask-target.app.81478"
+        },
+        {
+            "name": "Apple AirPlay",
+            "identifier": "amzn1.alexa-ask-target.app.25980"
+        },
+        {
+            "name": "Apple Music",
+            "identifier": "amzn1.alexa-ask-target.app.36379"
+        },
+        {
+            "name": "Apple TV",
+            "identifier": "amzn1.alexa-ask-target.app.67098"
+        },
+        {
+            "name": "ARD Mediathek",
+            "identifier": "amzn1.alexa-ask-target.app.55295"
+        },
+        {
+            "name": "Art App",
+            "identifier": "amzn1.alexa-ask-target.app.16484"
+        },
+        {
+            "name": "ARTE",
+            "identifier": "amzn1.alexa-ask-target.app.53044"
+        },
+        {
+            "name": "ARTE VOD",
+            "identifier": "amzn1.alexa-ask-target.app.93940"
+        },
+        {
+            "name": "AS TV",
+            "identifier": "amzn1.alexa-ask-target.app.27594"
+        },
+        {
+            "name": "AsianCrush",
+            "identifier": "amzn1.alexa-ask-target.app.63594"
+        },
+        {
+            "name": "Asphalt Nitro",
+            "identifier": "amzn1.alexa-ask-target.app.92612"
+        },
+        {
+            "name": "AT&T U-verse",
+            "identifier": "amzn1.alexa-ask-target.app.06176"
+        },
+        {
+            "name": "Atresplayer",
+            "identifier": "amzn1.alexa-ask-target.app.10314"
+        },
+        {
+            "name": "ATT TV",
+            "identifier": "amzn1.alexa-ask-target.app.88527"
+        },
+        {
+            "name": "Awesome Tube - Youtube to your heart",
+            "identifier": "amzn1.alexa-ask-target.app.81584"
+        },
+        {
+            "name": "Ax Lite Video Player",
+            "identifier": "amzn1.alexa-ask-target.app.94320"
+        },
+        {
+            "name": "Baby Einstein",
+            "identifier": "amzn1.alexa-ask-target.app.84548"
+        },
+        {
+            "name": "BBC iPlayer",
+            "identifier": "amzn1.alexa-ask-target.app.16602"
+        },
+        {
+            "name": "BBC News",
+            "identifier": "amzn1.alexa-ask-target.app.77571"
+        },
+        {
+            "name": "BBC Sounds",
+            "identifier": "amzn1.alexa-ask-target.app.44414"
+        },
+        {
+            "name": "BET",
+            "identifier": "amzn1.alexa-ask-target.app.14869"
+        },
+        {
+            "name": "BET+",
+            "identifier": "amzn1.alexa-ask-target.app.54747"
+        },
+        {
+            "name": "Bloomberg TV+",
+            "identifier": "amzn1.alexa-ask-target.app.16283"
+        },
+        {
+            "name": "Bravo Now",
+            "identifier": "amzn1.alexa-ask-target.app.59468"
+        },
+        {
+            "name": "BritBox",
+            "identifier": "amzn1.alexa-ask-target.app.30560"
+        },
+        {
+            "name": "BroadwayHD",
+            "identifier": "amzn1.alexa-ask-target.app.83895"
+        },
+        {
+            "name": "CBS",
+            "identifier": "amzn1.alexa-ask-target.app.86065"
+        },
+        {
+            "name": "CBS News",
+            "identifier": "amzn1.alexa-ask-target.app.57172"
+        },
+        {
+            "name": "CBS Sports",
+            "identifier": "amzn1.alexa-ask-target.app.79937"
+        },
+        {
+            "name": "CNN go",
+            "identifier": "amzn1.alexa-ask-target.app.58952"
+        },
+        {
+            "name": "Comedy Central",
+            "identifier": "amzn1.alexa-ask-target.app.93930"
+        },
+        {
+            "name": "Crunchyroll",
+            "identifier": "amzn1.alexa-ask-target.app.72409"
+        },
+        {
+            "name": "CuriosityStream",
+            "identifier": "amzn1.alexa-ask-target.app.18587"
+        },
+        {
+            "name": "DAZN",
+            "identifier": "amzn1.alexa-ask-target.app.00770"
+        },
+        {
+            "name": "Deezer",
+            "identifier": "amzn1.alexa-ask-target.app.92102"
+        },
+        {
+            "name": "Discovery+",
+            "identifier": "amzn1.alexa-ask-target.app.44411"
+        },
+        {
+            "name": "Disney+",
+            "identifier": "amzn1.alexa-ask-target.app.47714"
+        },
+        {
+            "name": "E! Now",
+            "identifier": "amzn1.alexa-ask-target.app.63749"
+        },
+        {
+            "name": "ESPN",
+            "identifier": "amzn1.alexa-ask-target.app.46024"
+        },
+        {
+            "name": "Fox",
+            "identifier": "amzn1.alexa-ask-target.app.62637"
+        },
+        {
+            "name": "Fox News",
+            "identifier": "amzn1.alexa-ask-target.app.17549"
+        },
+        {
+            "name": "Fox Sports",
+            "identifier": "amzn1.alexa-ask-target.app.25425"
+        },
+        {
+            "name": "HBO Max",
+            "identifier": "amzn1.alexa-ask-target.app.10001"
+        },
+        {
+            "name": "Hulu",
+            "identifier": "amzn1.alexa-ask-target.app.77683"
+        },
+        {
+            "name": "MLB.TV",
+            "identifier": "amzn1.alexa-ask-target.app.37820"
+        },
+        {
+            "name": "Netflix",
+            "identifier": "amzn1.alexa-ask-target.app.36377"
+        },
+        {
+            "name": "Pandora",
+            "identifier": "amzn1.alexa-ask-target.app.93941"
+        },
+        {
+            "name": "Paramount+",
+            "identifier": "amzn1.alexa-ask-target.app.54601"
+        },
+        {
+            "name": "Peacock",
+            "identifier": "amzn1.alexa-ask-target.app.94721"
+        },
+        {
+            "name": "Pluto TV",
+            "identifier": "amzn1.alexa-ask-target.app.93822"
+        },
+        {
+            "name": "Prime Video",
+            "identifier": "amzn1.alexa-ask-target.app.72095"
+        },
+        {
+            "name": "Showtime",
+            "identifier": "amzn1.alexa-ask-target.app.27166"
+        },
+        {
+            "name": "Sling TV",
+            "identifier": "amzn1.alexa-ask-target.app.39861"
+        },
+        {
+            "name": "Spotify",
+            "identifier": "amzn1.alexa-ask-target.app.43818"
+        },
+        {
+            "name": "Starz",
+            "identifier": "amzn1.alexa-ask-target.app.10530"
+        },
+        {
+            "name": "Tubi TV",
+            "identifier": "amzn1.alexa-ask-target.app.00132"
+        },
+        {
+            "name": "Vudu",
+            "identifier": "amzn1.alexa-ask-target.app.64811"
+        },
+        {
+            "name": "YouTube",
+            "identifier": "amzn1.alexa-ask-target.app.70045"
+        },
+        {
+            "name": "YouTube TV",
+            "identifier": "amzn1.alexa-ask-target.app.50623"
+        },
+        {
+            "name": "__Home__",
+            "identifier": "amzn1.alexa-ask-target.shortcut.33122"
+        },
+        {
+            "name": "__Options__",
+            "identifier": "amzn1.alexa-ask-target.shortcut.07395"
+        }        
+    ]
+}

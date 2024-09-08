@@ -1,0 +1,22 @@
+{
+    "devices": [
+        {
+            "device_id": "TV123",
+            "object_id": "living_room_tv",
+            "ip_address": "192.168.178.36",
+            "client_id": "TelevisioImperium",
+            "nick_name": "ImperiumTV",
+            "pin": 5697,
+            "preshared_key": "living_room"
+        },
+        {
+            "device_id": "TV456",
+            "object_id": "bedroom_tv",
+            "ip_address": "192.168.178.50",
+            "client_id": "BedroomTV",
+            "nick_name": "BedroomTV",
+            "pin": 1234,
+            "preshared_key": "bedroom"
+        }
+    ]
+}
