@@ -7,7 +7,7 @@ import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from app.config import Config
 from app.models import CommandLineArgs
-from app.services.mqtt_service import MqttService  # Import the MqttService singleton
+from app.services.mqtt_service import MqttService 
 
 class Host:
     def __init__(self, args: CommandLineArgs):
@@ -30,7 +30,7 @@ class Host:
         self.setup_routes()
 
         # Initialize MqttService (Singleton)
-        self.mqtt_service = MqttService()
+        self.mqtt_service = MqttService(client_id="mqtt_service_host")
 
     def setup_routes(self):
         """
@@ -158,7 +158,7 @@ class Host:
             if fastapi_task:  # Check if fastapi_task is initialized
                 fastapi_task.cancel()
                 await fastapi_task
-            await self.mqtt_service.disconnect()
+            await self.mqtt_service.shutdown()
 
     async def start_fastapi(self):
         """

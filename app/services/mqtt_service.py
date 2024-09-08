@@ -2,12 +2,11 @@ import asyncio
 import logging
 
 import paho.mqtt.client as mqtt
-import time
 from app.config.config import Config
 
-
+        
 class MqttService:
-    def __init__(self, heartbeat_interval: int = 10):
+    def __init__(self, heartbeat_interval: int = 10, client_id = None):
         """
         Initialize the MQTT service with a heartbeat interval for connection checks.
 
@@ -16,7 +15,7 @@ class MqttService:
         self.logger = logging.getLogger(__name__)
 
         # Initialize the MQTT client and connection parameters
-        self.client_id = "mqtt_service_singleton"
+        self.client_id = client_id
         config = Config()  # Load configuration
         self.broker = config.MQTT_BROKER
         self.port = config.MQTT_PORT
@@ -159,3 +158,19 @@ class MqttService:
         self.client.loop_stop()
         self.client.disconnect()
         self.logger.info("Disconnected from MQTT broker.")
+
+    async def shutdown(self) -> None:
+        """Gracefully shutdown the MQTT service."""
+        self.logger.info("Shutting down MQTT service...")
+        
+        # Check if the client is connected to the broker
+        if self._is_connected:
+            # If connected, call the disconnect method to properly disconnect
+            await self.disconnect()
+        
+        # Stop the MQTT client loop, forcefully if needed
+        self.client.loop_stop(force=True)
+        
+        # Log that the service has been fully shut down
+        self.logger.info("MQTT service shutdown complete.")
+    

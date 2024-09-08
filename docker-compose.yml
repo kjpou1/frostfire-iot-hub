@@ -20,12 +20,15 @@ services:
       # - ./ssl/dhparam2048.pem:/mosquitto/config/certs/dhparam.pem
     environment:
       - CERT_PATH=/mosquitto/config/certs
+    networks:
+      - iot_network      
     restart: unless-stopped
 
   frostfire-iot-hub:
     image: frostfire_iot_hub
     build:
       context: .
+      dockerfile: app/host/Dockerfile
     container_name: frostfire_iot_hub_container
     environment:
       HOST: "0.0.0.0"  # Bind to all interfaces
@@ -43,4 +46,36 @@ services:
     ports:
       - "8443:8443"
     command: python run.py  # Adjust based on your entry point
+    networks:
+      - iot_network
     restart: unless-stopped
+
+  frostfire-iot-handler: 
+    image: frostfire_iot_handler
+    build:
+      context: .
+      dockerfile: app/iot_handler/Dockerfile
+    container_name: frostfire_iot_handler_container
+    environment:
+      HOST: "0.0.0.0"  # Bind to all interfaces
+      PORT: "8443"      # Use port 8443 in production for HTTPS    
+      MQTT_BROKER: "mqtt-broker"  # Adjust based on your setup
+      MQTT_PORT: "1883"
+      MQTT_TOPIC: "domus/devices"
+      # SSL_KEYFILE: "/etc/letsencrypt/live/hicsvntdracons.xyz/privkey.pem"
+      # SSL_CERTFILE: "/etc/letsencrypt/live/hicsvntdracons.xyz/fullchain.pem"
+    # volumes:
+    #   - /etc/letsencrypt/live/hicsvntdracons.xyz/privkey.pem:/etc/letsencrypt/live/hicsvntdracons.xyz/privkey.pem:ro
+    #   - /etc/letsencrypt/live/hicsvntdracons.xyz/fullchain.pem:/etc/letsencrypt/live/hicsvntdracons.xyz/fullchain.pem:ro
+    #   # If you have DH parameters, include them as well
+    #   - /etc/ssl/dhparam.pem:/etc/letsencrypt/live/hicsvntdracons.xyz/dhparam.pem:ro
+    # ports:
+    #   - "8443:8443"
+    command: python run_iot_handler.py  # Adjust based on your entry point
+    networks:
+      - iot_network
+    restart: unless-stopped
+
+networks:
+  iot_network:
+    driver: bridge    

@@ -7,11 +7,22 @@
             "program": "${file}"
         },
         {
-            "name": "Python Run Main Debug",
+            "name": "Python Run Host Debug",
             "type": "debugpy",
             "request": "launch",
-            "program": "run.py",
+            "program": "${workspaceFolder}/run.py",
             "args": []
-        }
+        },
+        {
+            "name": "Python Run IOT Handler Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_iot_handler.py",
+            "console": "integratedTerminal",
+            "env": {
+                "MQTT_BROKER": "localhost",
+            },            
+            "args": []
+        }        
     ]
 }
