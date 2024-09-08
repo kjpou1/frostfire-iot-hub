@@ -1,5 +1,9 @@
 import asyncio
 import logging
+import importlib
+import inspect
+import os
+from app.plugins.plugin_interface import IotPlugin
 from app.config import Config
 from app.models import CommandLineArgs
 from app.services.mqtt_service import MqttService
@@ -27,17 +31,47 @@ class IotHandler:
 
         # Initialize MqttService for the IoT handler
         self.mqtt_service = MqttService(client_id="mqtt_service_iot_handler")
-
-        # Define the topics this handler will subscribe to, including TV-related topics
-        self.iot_topics = [
-            "domus/devices/tv/#",       # TV-related topics
-            "domus/devices/lights/#",   # Lights-related topics
-            "domus/devices/thermostat/#"  # Thermostat-related topics
-        ]
+        self.plugin_dir = self.config.PLUGINS_DIR
 
         # Store the current asyncio event loop to schedule tasks
         self.loop = asyncio.get_event_loop()
 
+    async def load_plugins(self):
+        """
+        Dynamically load all plugins from the 'plugins' directory that implement the IPlugin interface,
+        and call their initialize method.
+        """
+        plugins = []
+
+        for module_name in os.listdir(self.plugin_dir):
+            if module_name.endswith('.py') and not module_name.startswith('__'):
+                # Import module dynamically
+                module_path = f"app.plugins.{module_name[:-3]}"
+                try:
+                    module = importlib.import_module(module_path)
+
+                    # Find all classes in the module that implement the IotPlugin interface
+                    for name, obj in inspect.getmembers(module, inspect.isclass):
+                        if issubclass(obj, IotPlugin) and obj is not IotPlugin:
+                            plugin_instance = obj()  # Instantiate plugin
+                            await plugin_instance.initialize()  # Call initialize on the plugin
+                            plugins.append(plugin_instance)
+                            # Log the plugin that has been loaded
+                            self.logger.debug(f"Loaded plugin: {name}")
+                except Exception as e:
+                    self.logger.error(f"Error loading plugin {module_name}: {e}")
+
+        return plugins
+
+    def subscribe_plugin_topics(self):
+        """
+        Subscribe the MQTT client to all topics handled by the loaded plugins.
+        """
+        for plugin in self.plugins:
+            for topic in plugin.get_topics():
+                self.mqtt_service.client.subscribe(topic)
+                self.logger.info("Subscribed to topic: %s", topic)
+                
     def on_message_sync(self, client, userdata, message):
         """
         Synchronous message handler for MQTT messages. When a message is received,
@@ -66,65 +100,16 @@ class IotHandler:
 
         self.logger.info("Received message on topic %s: %s", topic, payload)
 
-        # Route the message to the appropriate handler based on the topic
-        if "tv" in topic:
-            await self.handle_tv_message(payload)
-        elif "lights" in topic:
-            await self.handle_lights_message(payload)
-        elif "thermostat" in topic:
-            await self.handle_thermostat_message(payload)
+        # Loop through each plugin and find the one that can handle this topic
+        for plugin in self.plugins:
+            if plugin.can_handle_topic(topic):
+                self.logger.info(f"Delegating message on topic {topic} to plugin {plugin.__class__.__name__}")
+                await plugin.process_message(topic, payload)
+                break
         else:
-            self.logger.warning("Unrecognized topic: %s", topic)
-
-    async def handle_tv_message(self, payload):
-        """
-        Processes messages related to TV IoT control. Handles commands like power on/off.
-
-        Parameters:
-        - payload: The message payload, typically a command (e.g., "power_on", "power_off").
-        """
-        if payload == "power_on":
-            self.logger.info("Turning TV on")
-            # Add logic to send the power on command to the TV
-        elif payload == "power_off":
-            self.logger.info("Turning TV off")
-            # Add logic to send the power off command to the TV
-        else:
-            self.logger.warning("Unrecognized TV command: %s", payload)
-
-    async def handle_lights_message(self, payload):
-        """
-        Processes messages related to lights IoT control.
-
-        Parameters:
-        - payload: The message payload, typically a command like "lights_on" or "lights_off".
-        """
-        if payload == "lights_on":
-            self.logger.info("Turning lights on")
-            # Add logic to turn on the lights
-        elif payload == "lights_off":
-            self.logger.info("Turning lights off")
-            # Add logic to turn off the lights
-        else:
-            self.logger.warning("Unrecognized lights command: %s", payload)
-
-    async def handle_thermostat_message(self, payload):
-        """
-        Processes messages related to thermostat IoT control.
-
-        Parameters:
-        - payload: The message payload, typically a temperature setting (e.g., "set_temp:21").
-        """
-        try:
-            if payload.startswith("set_temp:"):
-                temp = int(payload.split(":")[1])
-                self.logger.info("Setting thermostat to %d°C", temp)
-                # Add logic to set the thermostat temperature
-            else:
-                self.logger.warning("Unrecognized thermostat command: %s", payload)
-        except ValueError:
-            self.logger.error("Invalid temperature value: %s", payload)
-
+            self.logger.warning(f"No plugin found to handle topic: {topic}")
+        
+    
     async def run_async(self):
         """
         Asynchronous method to start and manage the MQTT service. It connects to the broker,
@@ -139,13 +124,12 @@ class IotHandler:
             # Wait until the connection is successfully established
             await self.mqtt_service.wait_for_connection()
 
+            # Load plugins and subscribe to their topics
+            self.plugins = await self.load_plugins()  # Ensure plugins are loaded and initialized
+            self.subscribe_plugin_topics()  # Subscribe the loaded plugins' topics
+
             # Start the heartbeat task to maintain the MQTT connection
             heartbeat_task = asyncio.create_task(self.mqtt_service.heartbeat())
-
-            # Subscribe to all IoT topics (e.g., TV, lights, thermostat)
-            for topic in self.iot_topics:
-                self.mqtt_service.client.subscribe(topic)
-                self.logger.info("Subscribed to topic: %s", topic)
 
             # Set the synchronous message handler for MQTT messages
             self.mqtt_service.client.on_message = self.on_message_sync
@@ -158,6 +142,8 @@ class IotHandler:
             # Handle process cancellation gracefully
             self.logger.info("Stopping IOT Handler process.")
         finally:
+            for plugin in self.plugins:
+                await plugin.shutdown()            
             # Ensure graceful disconnection from the MQTT broker
             await self.mqtt_service.shutdown()
 

@@ -23,6 +23,9 @@ class Config(metaclass=SingletonMeta):
             # Host and Port for FastAPI/Uvicorn
             self._host = self.get('HOST', '127.0.0.1')  # Default local host
             self._port = int(self.get('PORT', 8084))  # Default to 8084
+            
+            # Plugins directory path from .env
+            self._plugins_dir = self.get('PLUGINS_DIR', 'app/plugins')            
 
             self._is_initialized = True
 
@@ -69,3 +72,8 @@ class Config(metaclass=SingletonMeta):
     @property
     def PORT(self):
         return self._port
+
+    # Property for PLUGINS_DIR
+    @property
+    def PLUGINS_DIR(self):
+        return self._plugins_dir
