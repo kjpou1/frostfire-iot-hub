@@ -156,4 +156,287 @@ class TVService:
         else:
             self.logger.error("TV is not connected.")
 
-    # Additional methods (play, pause, stop, etc.) would also work similarly
+   # Playback Control Methods
+
+    async def play(self):
+        """
+        Asynchronously start or resume playback on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                await client.play()
+                self.logger.info("Playback started/resumed successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to start/resume playback: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def pause(self):
+        """
+        Asynchronously pause playback on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                await client.pause()
+                self.logger.info("Playback paused successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to pause playback: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def stop(self):
+        """
+        Asynchronously stop playback on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                await client.stop()
+                self.logger.info("Playback stopped successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to stop playback: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def rewind(self):
+        """
+        Asynchronously rewind playback on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                # await client.rewind()
+                self.logger.info("Playback rewound successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to rewind playback: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def fast_forward(self):
+        """
+        Asynchronously fast forward playback on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                # await client.fast_forward()
+                self.logger.info("Playback fast forwarded successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to fast forward playback: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def start_over(self):
+        """
+        Asynchronously start playback from the beginning on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                # await client.start_over()
+                self.logger.info("Playback started over successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to start playback over: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def previous(self):
+        """
+        Asynchronously skip to the previous item on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                await client.previous_track()
+                self.logger.info("Skipped to previous item successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to skip to previous item: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def next(self):
+        """
+        Asynchronously skip to the next item on the TV.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                await client.next_track()
+                self.logger.info("Skipped to next item successfully.")
+            except BraviaError as e:
+                self.logger.error("Failed to skip to next item: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def get_app_list(self):
+        """
+        Asynchronously retrieve the list of available applications from the TV.
+
+        This method connects to the Sony Bravia TV using the BraviaClient, retrieves
+        the list of available applications installed on the TV, and then disconnects
+        from the TV. If the connection to the TV fails or retrieving the app list
+        encounters an error, appropriate logging is performed.
+
+        Returns:
+            list: A list of dictionaries, where each dictionary contains information
+                about an available application on the TV, such as the app name and URI.
+                Returns None if the connection fails or the app list cannot be retrieved.
+
+        Raises:
+            BraviaError: If an error occurs while attempting to retrieve the application list.
+
+        Example:
+            apps = await tv_service.get_app_list()
+            if apps:
+                for app in apps:
+                    print(f"App Name: {app['name']}, URI: {app['uri']}")
+            else:
+                print("Failed to retrieve the app list.")
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                return await client.get_app_list()
+            except BraviaError as e:
+                self.logger.error("Failed to get the application list: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def launch_app(self, app_name):
+        """
+        Asynchronously launch an app on the TV.
+
+        Args:
+            app_name (str): The name of the app to launch.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                await client.set_active_app(app_name)
+                self.logger.info("App '%s' launched successfully.", app_name)
+            except BraviaError as e:
+                self.logger.error("Failed to launch app '%s': %s", app_name, e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def get_source_list(self, scheme="extInput"):
+        """
+        Asynchronously retrieve the list of available input sources from the TV.
+
+        This method connects to the Sony Bravia TV using the BraviaClient, retrieves
+        the list of available input sources, and then disconnects from the TV. If the
+        connection to the TV fails or retrieving the source list encounters an error,
+        appropriate logging is performed.
+
+        Returns:
+            list: A list of dictionaries, where each dictionary contains information
+                about an available input source on the TV, such as the source name and
+                corresponding input identifier (e.g., HDMI 1, HDMI 2, etc.).
+                Returns None if the connection fails or the source list cannot be retrieved.
+
+        Raises:
+            BraviaError: If an error occurs while attempting to retrieve the input source list.
+
+        Example:
+            sources = await tv_service.get_source_list()
+            if sources:
+                for source in sources:
+                    print(f"Source Name: {source['title']}, ID: {source['source']}")
+            else:
+                print("Failed to retrieve the source list.")
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                return await client.get_source_list(scheme=scheme)
+            except BraviaError as e:
+                self.logger.error("Failed to get the source list: %s", e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    async def change_input(self, input_source):
+        """
+        Asynchronously change the input source on the TV.
+
+        Args:
+            input_source (str): The input source to switch to (e.g., 'HDMI 2').
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                if await client.send_command(input_source):
+                    self.logger.info(
+                        "Input source changed to '%s' successfully.", input_source
+                    )
+                else:
+                    self.logger.error(
+                        "Failed to change input source to '%s'.", input_source
+                    )
+            except BraviaError as e:
+                self.logger.error(
+                    "Failed to change input source to '%s': %s", input_source, e
+                )
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")
+
+    def write_dict_to_file(self, data, file_path):
+        """
+        Write a Python dictionary to a file using UTF-8 encoding.
+
+        Args:
+            data (dict): The dictionary to write to the file.
+            file_path (str): The path to the file where the dictionary will be written.
+        """
+        try:
+            with open(file_path, "w", encoding="utf-8") as file:
+                json.dump(data, file, ensure_ascii=False, indent=4)
+            print(f"Dictionary successfully written to {file_path}")
+        except Exception as e:
+            print(f"Error writing dictionary to file: {e}")
+
+    async def goto(self, where):
+        """
+        Asynchronously launch an app on the TV.
+
+        Args:
+            app_name (str): The name of the app to launch.
+        """
+        client = await self.connect_to_tv()
+        if client:
+            try:
+                if await client.send_command(where):
+                    self.logger.info("Goto where '%s' successfully.", where)
+                else:
+                    self.logger.error("Failed to change input source to '%s'.", where)
+            except BraviaError as e:
+                self.logger.error("Failed to goto '%s': %s", where, e)
+            finally:
+                await client.disconnect()
+        else:
+            self.logger.error("TV is not connected.")

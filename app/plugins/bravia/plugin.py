@@ -2,7 +2,15 @@ import fnmatch
 import json
 import logging
 import os
+from app.plugins.bravia.handlers.input_intent_handler import InputIntentHandler
+from app.plugins.bravia.handlers.launch_intent_handler import LaunchIntentHandler
+from app.plugins.bravia.handlers.playback_intent_handler import PlaybackIntentHandler
+from app.plugins.bravia.handlers.speaker_intent_handler import SpeakerIntentHandler
+from app.plugins.bravia.services.input_intent_service import InputIntentService
+from app.plugins.bravia.services.launch_intent_service import LaunchIntentService
+from app.plugins.bravia.services.playback_intent_service import PlaybackIntentService
 from app.plugins.bravia.services.power_intent_service import PowerIntentService
+from app.plugins.bravia.services.speaker_intent_service import SpeakerIntentService
 from app.plugins.plugin_interface import IotPlugin
 from app.plugins.bravia.handlers.power_intent_handler import PowerIntentHandler
 
@@ -20,12 +28,15 @@ class BraviaPlugin(IotPlugin):
         
         self.devices = []  # To store device configurations
 
+        # Dynamically determine the plugin's base directory
+        self.plugin_directory = os.path.dirname(os.path.abspath(__file__))
+        
         # Define handlers for different command categories
         self.power_handler = PowerIntentHandler(PowerIntentService())
-        # self.speaker_handler = SpeakerHandler()
-        # self.playback_handler = PlaybackHandler()
-        # self.launch_handler = LaunchHandler()
-        # self.input_handler = InputHandler()
+        self.speaker_handler = SpeakerIntentHandler(SpeakerIntentService())
+        self.playback_handler = PlaybackIntentHandler(PlaybackIntentService())
+        self.launch_handler = LaunchIntentHandler(LaunchIntentService(self.plugin_directory))
+        self.input_handler = InputIntentHandler(InputIntentService(self.plugin_directory))
                 
 
     async def initialize(self):
@@ -139,39 +150,39 @@ class BraviaPlugin(IotPlugin):
                     )
 
                 # Handling Speaker Commands
-                # elif (
-                #     device_type == "tv" and category == "speaker" and len(topic_parts) >= 7
-                # ):
-                #     subcategory = topic_parts[5]  # 'volume' or 'mute'
-                #     action = topic_parts[6]
-                #     self.logger.info(f"Handling speaker command: {subcategory} - {action}")
-                #     await self.speaker_handler.handle_speaker_command(
-                #         device_type, device_id, subcategory, action, payload_str
-                #     )
+                elif (
+                    device_type == "tv" and category == "speaker" and len(topic_parts) >= 7
+                ):
+                    subcategory = topic_parts[5]  # 'volume' or 'mute'
+                    action = topic_parts[6]
+                    self.logger.info(f"Handling speaker command: {subcategory} - {action}")
+                    await self.speaker_handler.handle_speaker_command(
+                        device_type, device, subcategory, action, payload_str
+                    )
 
-                # # Handling Playback Commands
-                # elif (
-                #     device_type == "tv" and category == "playback" and len(topic_parts) >= 6
-                # ):
-                #     action = topic_parts[5]
-                #     self.logger.info(f"Handling playback command: {action}")
-                #     await self.playback_handler.handle_playback_command(
-                #         device_type, device_id, action, payload_str
-                #     )
+                # Handling Playback Commands
+                elif (
+                    device_type == "tv" and category == "playback" and len(topic_parts) >= 6
+                ):
+                    action = topic_parts[5]
+                    self.logger.info(f"Handling playback command: {action}")
+                    await self.playback_handler.handle_playback_command(
+                        device_type, device, action, payload_str
+                    )
 
-                # # Handling Launch Commands
-                # elif device_type == "tv" and category == "launcher":
-                #     self.logger.info(f"Handling launch command for {device_id}")
-                #     await self.launch_handler.handle_launch_command(
-                #         device_type, device_id, payload_str
-                #     )
+                # Handling Launch Commands
+                elif device_type == "tv" and category == "launcher":
+                    self.logger.info(f"Handling launch command for {device_id}")
+                    await self.launch_handler.handle_launch_command(
+                        device_type, device, payload_str
+                    )
 
-                # # Check if the topic is for TV input change
-                # elif device_type == "tv" and category == "input":
-                #     self.logger.info(f"Handling input change for {device_id}")
-                #     await self.input_handler.handle_input_change(
-                #         device_type, device_id, payload_str
-                #     )
+                # Check if the topic is for TV input change
+                elif device_type == "tv" and category == "input":
+                    self.logger.info(f"Handling input change for {device_id}")
+                    await self.input_handler.handle_input_change(
+                        device_type, device, payload_str
+                    )
                 else:
                     self.logger.warning(f"Unrecognized command category: {category}")
             else:
