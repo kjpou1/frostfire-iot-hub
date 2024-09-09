@@ -1,5 +1,4 @@
-import json
-
+from .json_utils import JsonUtils
 
 class TVAppMapper:
     def __init__(self):
@@ -23,24 +22,22 @@ class TVAppMapper:
 
     def load_alexa_apps(self, file_path):
         """
-        Load the Alexa applications from a JSON file.
+        Load the Alexa applications from a JSON file using JsonUtils.
 
         :param file_path: Path to the JSON file containing Alexa app data.
         """
-        try:
-            with open(file_path, "r", encoding="utf-8") as file:
-                data = json.load(file)
-                # Create mappings from Alexa data with case-insensitive keys
-                self.alexa_to_tv_mapping = {
-                    app["identifier"]: app["name"].lower()
-                    for app in data.get("apps", [])
-                }
-                self.alexa_name_to_identifier = {
-                    app["name"].lower(): app["identifier"]
-                    for app in data.get("apps", [])
-                }
-        except Exception as e:
-            print(f"Error loading Alexa apps from {file_path}: {e}")
+        data = JsonUtils.load_json_file(file_path)  # Use JsonUtils for file loading
+
+        if data:
+            # Create mappings from Alexa data with case-insensitive keys
+            self.alexa_to_tv_mapping = {
+                app["identifier"]: app["name"].lower() for app in data.get("apps", [])
+            }
+            self.alexa_name_to_identifier = {
+                app["name"].lower(): app["identifier"] for app in data.get("apps", [])
+            }
+        else:
+            print(f"Error loading Alexa apps from {file_path}")
 
     def build_alexa_to_tv_mapping(self):
         """

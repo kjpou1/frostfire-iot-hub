@@ -1,6 +1,6 @@
 import json
 import logging
-from app.plugins.bravia.services.speaker_intent_service import SpeakerIntentService
+from ..services.speaker_intent_service import SpeakerIntentService
 
 class SpeakerIntentHandler:
     """

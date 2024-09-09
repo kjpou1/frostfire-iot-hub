@@ -1,7 +1,7 @@
 import json
 import logging
 
-from app.plugins.bravia.services.launch_intent_service import LaunchIntentService
+from ..services.launch_intent_service import LaunchIntentService
 
 
 class LaunchIntentHandler:

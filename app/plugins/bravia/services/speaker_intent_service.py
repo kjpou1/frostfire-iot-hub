@@ -1,5 +1,5 @@
 import logging
-from app.plugins.bravia.services.tv_service import TVService
+from .tv_service import TVService
 
 class SpeakerIntentService:
     """

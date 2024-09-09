@@ -2,9 +2,8 @@ import logging
 import os
 
 from app.config import Config
-from app.plugins.bravia.services.tv_service import TVService
-from app.plugins.bravia.utils.tv_app_mapper import TVAppMapper
-
+from .tv_service import TVService
+from ..utils.tv_app_mapper import TVAppMapper
 
 class LaunchIntentService:
     """

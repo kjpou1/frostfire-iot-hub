@@ -1,7 +1,7 @@
 import json
 import logging
 
-from app.plugins.bravia.services.playback_intent_service import PlaybackIntentService
+from ..services.playback_intent_service import PlaybackIntentService
 
 
 class PlaybackIntentHandler:

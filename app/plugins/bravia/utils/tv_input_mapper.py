@@ -1,43 +1,37 @@
-import json
 import logging
 from typing import Dict, Optional
-
-from app.config import Config
-
+from .json_utils import JsonUtils
 
 class TVInputMapper:
     """
     Utility class for mapping Alexa input values to TV input commands.
     """
 
-    def __init__(self, input_mappings_file_path : str):
+    def __init__(self, input_mappings_file_path: str):
         """
         Initializes the TVInputMapper by loading the input mappings from a JSON configuration file.
 
-        The configuration file path is obtained from the Config class, and the input mappings
+        The configuration file path is passed during initialization, and the input mappings
         are loaded into a dictionary for quick lookups.
         """
         self.logger = logging.getLogger(__name__)
-        self.config = Config()
         self.input_mappings = self._load_input_mappings(input_mappings_file_path)
 
-    def _load_input_mappings(self, input_mappings_file_path) -> Dict[str, str]:
+    def _load_input_mappings(self, input_mappings_file_path: str) -> Dict[str, str]:
         """
-        Load input mappings from the JSON configuration file specified in Config.
+        Load input mappings from the JSON configuration file specified by the provided file path.
 
         Returns:
             dict: A dictionary containing the Alexa to TV input mappings.
                   Returns an empty dictionary if the file cannot be loaded.
         """
-        try:
-            with open(
-                input_mappings_file_path, "r", encoding="utf-8"
-            ) as file:
-                data = json.load(file)
-                self.logger.info("Input mappings loaded successfully.")
-                return data.get("input_mappings", {})
-        except Exception as e:
-            self.logger.error("Error loading input mappings: %s", e)
+        data = JsonUtils.load_json_file(input_mappings_file_path)  # Use JsonUtils for file loading
+
+        if data:
+            self.logger.info("Input mappings loaded successfully.")
+            return data.get("input_mappings", {})
+        else:
+            self.logger.error(f"Failed to load input mappings from {input_mappings_file_path}")
             return {}
 
     def get_tv_input_command(self, alexa_input: str) -> Optional[str]:
@@ -65,11 +59,3 @@ class TVInputMapper:
         else:
             self.logger.warning("No mapping found for Alexa input '%s'.", alexa_input)
         return tv_input_command
-
-
-# Example usage
-# if __name__ == "__main__":
-#     input_mapper = TVInputMapper()
-#     alexa_input = "HDMI 1"
-#     tv_input_command = input_mapper.get_tv_input_command(alexa_input)
-#     print(f"TV input command for Alexa input '{alexa_input}': {tv_input_command}")

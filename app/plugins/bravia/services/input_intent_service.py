@@ -1,8 +1,8 @@
 import logging
 import os
 
-from app.plugins.bravia.services.tv_service import TVService
-from app.plugins.bravia.utils.tv_input_mapper import TVInputMapper
+from .tv_service import TVService
+from ..utils.tv_input_mapper import TVInputMapper
 
 
 class InputIntentService:

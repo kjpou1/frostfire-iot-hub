@@ -1,6 +1,6 @@
 import json
 import logging
-from app.plugins.bravia.services.power_intent_service import PowerIntentService
+from ..services.power_intent_service import PowerIntentService
 
 
 class PowerIntentHandler:

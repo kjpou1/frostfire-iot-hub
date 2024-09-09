@@ -1,7 +1,7 @@
 import json
 import logging
 
-from app.plugins.bravia.services.input_intent_service import InputIntentService
+from ..services.input_intent_service import InputIntentService
 
 
 class InputIntentHandler:
