@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 import os
+from typing import Optional
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from app.config import Config
@@ -50,47 +51,62 @@ class Host:
         async def mqtt_topics_publish(
             request: Request,
             qos: int = Query(0, description="The Quality of Service level"),
-            retain: bool = Query(
-                False, description="Set the RETAIN flag when the message is published"
-            ),
-            x_amz_mqtt5_user_properties: str = Header(None),
+            retain: bool = Query(False, description="Set the RETAIN flag when the message is published"),
+            x_amz_mqtt5_user_properties: Optional[str] = Header(None),
+            x_api_key: Optional[str] = Header(None, description="API Key for authorization"),
+            authorization: Optional[str] = Header(None, description="Bearer Token for authorization")
         ):
-            # Check if the header exists
-            if not x_amz_mqtt5_user_properties:
-                raise HTTPException(status_code=401, detail="Not authorized")
+           
+            # Prioritize validation for x_amz_mqtt5_user_properties first
+            if x_amz_mqtt5_user_properties:
+                decoded_properties = self.decode_user_properties(x_amz_mqtt5_user_properties)
+                api_key = next(
+                    (prop.get("API_KEY") for prop in decoded_properties if "API_KEY" in prop), None
+                )
+                if api_key and api_key not in self.load_api_keys():
+                    raise HTTPException(status_code=401, detail="Invalid API Key from user properties")
+            # If no x_amz_mqtt5_user_properties, proceed with Bearer Token validation
+            elif authorization:
+                if not self.validate_bearer_token(authorization):
+                    raise HTTPException(status_code=401, detail="Invalid Bearer Token")
+            # If no Bearer Token, validate API Key
+            elif x_api_key:
+                if x_api_key not in self.load_api_keys():
+                    raise HTTPException(status_code=401, detail="Invalid API Key")
+            else:
+                # If none of the above headers are provided, raise an error
+                raise HTTPException(status_code=401, detail="API key, Authorization header, or user properties required")
 
-            # Extract the full path from the request
+            # Extract the topic from the URL
             full_path = request.url.path
             topic = full_path.split("/topics/", 1)[-1]
 
+            # Validate that the topic is not empty
+            if not topic or topic.isspace():
+                raise HTTPException(status_code=400, detail="MQTT topic is required and cannot be empty")
+            
             # Extract the raw body of the request
             body = await request.body()
-            message = body.decode("utf-8")  # Decode bytes to string
+            message = body.decode("utf-8")
 
-            # Decode the base64 encoded header value for user properties
-            decoded_properties = self.decode_user_properties(x_amz_mqtt5_user_properties)
-
-            # Check if the API_KEY is present and valid
-            api_key = next(
-                (
-                    prop.get("API_KEY")
-                    for prop in decoded_properties
-                    if "API_KEY" in prop
-                ),
-                None,
-            )
-            if not api_key or api_key not in self.load_api_keys():
-                raise HTTPException(status_code=401, detail="Not authorized")
-
-            # Use MqttService to publish the message to the MQTT topic
+            # Use MqttService to publish the message
             await self.mqtt_service.publish(topic, message)
 
-            return {
-                "message": f"Message '{message}' published to topic '{topic}' with QoS {qos}."
-            }
+            return {"message": f"Message '{message}' published to topic '{topic}' with QoS {qos}."}
 
     @staticmethod
-    def decode_user_properties(encoded_user_properties):
+    def validate_bearer_token(authorization_header: str) -> bool:
+        """
+        Validate Bearer token from the Authorization header.
+        """
+        if authorization_header.startswith("Bearer "):
+            token = authorization_header.split("Bearer ")[-1]
+            # Check if the token exists in the API keys
+            return token in Host.load_api_keys() 
+        return False
+    
+    @staticmethod
+    def decode_user_properties(encoded_user_properties: str):
         """
         Decode a base64-encoded string and parse it into a JSON object.
         """
@@ -101,9 +117,7 @@ class Host:
             if decoded_string.startswith('"') and decoded_string.endswith('"'):
                 decoded_string = json.loads(decoded_string)
 
-            user_properties_json = json.loads(decoded_string)
-
-            return user_properties_json
+            return json.loads(decoded_string)
         except (base64.binascii.Error, json.JSONDecodeError) as e:
             logging.error(f"Error decoding user properties: {e}")
             return None

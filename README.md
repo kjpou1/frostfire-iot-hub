@@ -15,13 +15,21 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
     - [Usage](#usage)
   - [Sample `publisher.py`](#sample-publisherpy)
   - [Sample `subscriber.py`](#sample-subscriberpy)
+  - [Testing API with API Key and Authorization](#testing-api-with-api-key-and-authorization)
+    - [**API Key Authentication Example**](#api-key-authentication-example)
+      - [Example POST Request:](#example-post-request)
+    - [**Bearer Token Authorization Example**](#bearer-token-authorization-example)
+      - [Example POST Request:](#example-post-request-1)
+    - [**Testing with Postman**](#testing-with-postman)
+      - [**API Key Authentication with Postman**](#api-key-authentication-with-postman)
+      - [**Bearer Token Authorization with Postman**](#bearer-token-authorization-with-postman)
   - [Topic Explanation: `iot/devices`](#topic-explanation-iotdevices)
     - [Example Usage of the `iot/devices` Topic](#example-usage-of-the-iotdevices-topic)
       - [Publisher](#publisher)
       - [Subscriber](#subscriber)
     - [Use Cases for `iot/devices`](#use-cases-for-iotdevices)
     - [Hierarchical Topics](#hierarchical-topics)
-    - [Running with Docker Compose](#running-with-docker-compose)
+  - [Running with Docker Compose](#running-with-docker-compose)
     - [Docker Troubleshooting](#docker-troubleshooting)
     - [Address Already in Use](#address-already-in-use)
       - [Steps to Resolve:](#steps-to-resolve)
@@ -292,6 +300,78 @@ if __name__ == "__main__":
 
 ```
 
+## Testing API with API Key and Authorization
+
+Once the IoT Hub is running, you can interact with it by publishing messages to the defined MQTT topics via HTTP requests. Below are examples for how to publish a message using either an API key or a Bearer token for authorization.
+
+### **API Key Authentication Example**
+To authenticate with the Frostfire IoT Hub using an API key, include the `x-api-key` header in your request.
+
+#### Example POST Request:
+```bash
+curl -X POST "http://localhost:8443/topics/iot/devices/temperature" \
+     -H "x-api-key: your_api_key_here" \
+     -H "Content-Type: application/json" \
+     -d '{"temperature": 23.5}'
+```
+
+In this example:
+- **`x-api-key`**: Replace `your_api_key_here` with your actual API key from the `api_keys.txt` file or configured elsewhere.
+- **URL**: The endpoint corresponds to the topic `iot/devices/temperature`. You can adjust the URL depending on the topic you want to publish to.
+- **Data**: This POST request publishes a temperature reading of 23.5.
+
+---
+
+### **Bearer Token Authorization Example**
+Alternatively, you can authenticate using a Bearer token by including it in the `Authorization` header.
+
+#### Example POST Request:
+```bash
+curl -X POST "http://localhost:8443/topics/iot/devices/temperature" \
+     -H "Authorization: Bearer your_token_here" \
+     -H "Content-Type: application/json" \
+     -d '{"temperature": 23.5}'
+```
+
+In this example:
+- **`Authorization`**: Replace `your_token_here` with your Bearer token.
+- The rest of the request is similar to the API key example.
+
+### **Testing with Postman**
+
+If you prefer using a graphical tool like **Postman** to test the Frostfire IoT Hub, here’s how you can configure it:
+
+#### **API Key Authentication with Postman**
+1. Open **Postman** and select **POST** as the method.
+2. Enter the URL: `http://localhost:8443/topics/iot/devices/temperature`.
+3. In the **Headers** section, add:
+   - `x-api-key: your_api_key_here`
+   - `Content-Type: application/json`
+4. In the **Body** tab, select **raw** and **JSON** format, then enter the following payload:
+   ```json
+   {
+     "temperature": 23.5
+   }
+   ```
+5. Click **Send**.
+
+#### **Bearer Token Authorization with Postman**
+1. Open **Postman** and select **POST** as the method.
+2. Enter the URL: `http://localhost:8443/topics/iot/devices/temperature`.
+3. In the **Headers** section, add:
+   - `Authorization: Bearer your_token_here`
+   - `Content-Type: application/json`
+4. In the **Body** tab, select **raw** and **JSON** format, then enter the following payload:
+   ```json
+   {
+     "temperature": 23.5
+   }
+   ```
+5. Click **Send**.
+
+Both methods should allow you to interact with the Frostfire IoT Hub and publish messages to the specified MQTT topic.
+
+
 ## Topic Explanation: `iot/devices`
 
 In MQTT, topics are used to categorize messages and control who can see which messages. A topic is a hierarchical namespace that clients (both publishers and subscribers) use to exchange messages.
@@ -323,7 +403,7 @@ The topic structure `iot/devices` can be further extended to create a hierarchic
 
 This hierarchical structuring allows more granular control and filtering of messages.
 
-### Running with Docker Compose
+## Running with Docker Compose
 
 You can set up and run the Frostfire IoT Hub with Mosquitto MQTT broker using Docker Compose. Follow these steps:
 
