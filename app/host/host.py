@@ -38,7 +38,7 @@ class Host:
         """
         @self.app.get("/")
         async def read_root():
-            return {"message": "Welcome to the Host API!"}
+            return {"message": "Here be dragons... and IoT connections. Welcome to Frostfire IoT Hub, where flames of data light up the digital skies!"}
 
         @self.app.get("/mqtt/status")
         async def mqtt_status():
