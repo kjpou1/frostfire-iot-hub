@@ -10,6 +10,7 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
     - [Configuration](#configuration)
       - [**API Key Authentication**:](#api-key-authentication)
       - [**Bearer Token Authentication**:](#bearer-token-authentication)
+      - [**Amazon Request Validation**:](#amazon-request-validation)
     - [Setting Up the MQTT Hub](#setting-up-the-mqtt-hub)
       - [Install Mosquitto MQTT Broker](#install-mosquitto-mqtt-broker)
       - [Configure Mosquitto](#configure-mosquitto)
@@ -85,13 +86,16 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
 
 ### Configuration
 
-All configuration settings are managed through environment variables. You will also need to store valid API keys in the `app/resources/api_keys.txt` file. These keys can be used for both **API key authentication** and **Bearer token validation**.
+All configuration settings are managed through environment variables. You will also need to store valid API keys in the `app/resources/api_keys.txt` file. These keys are used for **API key authentication**, **Bearer token validation**, and **Amazon request validation** via the `x_amz_mqtt5_user_properties` header.
 
 #### **API Key Authentication**:
-- Requests must include an `x-api-key` header with one of the valid API keys.
+- Requests must include an `x-api-key` header with one of the valid API keys from the `api_keys.txt` file.
 
 #### **Bearer Token Authentication**:
 - Requests can alternatively authenticate using a **Bearer token** by including it in the `Authorization` header. The token is checked against the same set of API keys stored in the `api_keys.txt` file.
+
+#### **Amazon Request Validation**:
+- For Amazon-related requests, the `x_amz_mqtt5_user_properties` header may be included. This header should be base64-encoded, and once decoded, the API key in the user properties is validated against the keys in the `api_keys.txt` file.
 
 Example `.env` file:
 ```ini
