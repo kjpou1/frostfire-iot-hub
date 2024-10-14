@@ -8,6 +8,8 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
     - [Configuration](#configuration)
+      - [**API Key Authentication**:](#api-key-authentication)
+      - [**Bearer Token Authentication**:](#bearer-token-authentication)
     - [Setting Up the MQTT Hub](#setting-up-the-mqtt-hub)
       - [Install Mosquitto MQTT Broker](#install-mosquitto-mqtt-broker)
       - [Configure Mosquitto](#configure-mosquitto)
@@ -83,11 +85,13 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
 
 ### Configuration
 
-All configuration settings are managed through environment variables. Here are the variables you need to set in the `.env` file:
+All configuration settings are managed through environment variables. You will also need to store valid API keys in the `app/resources/api_keys.txt` file. These keys can be used for both **API key authentication** and **Bearer token validation**.
 
-- `MQTT_BROKER`: The address of your MQTT broker.
-- `MQTT_PORT`: The port your MQTT broker is listening on.
-- `MQTT_TOPIC`: The topic to which the hub subscribes and publishes.
+#### **API Key Authentication**:
+- Requests must include an `x-api-key` header with one of the valid API keys.
+
+#### **Bearer Token Authentication**:
+- Requests can alternatively authenticate using a **Bearer token** by including it in the `Authorization` header. The token is checked against the same set of API keys stored in the `api_keys.txt` file.
 
 Example `.env` file:
 ```ini
@@ -95,6 +99,10 @@ MQTT_BROKER=mqtt.example.com
 MQTT_PORT=1883
 MQTT_TOPIC=iot/devices
 ```
+
+- `MQTT_BROKER`: The address of your MQTT broker.
+- `MQTT_PORT`: The port your MQTT broker is listening on.
+- `MQTT_TOPIC`: The topic to which the hub subscribes and publishes.
 
 Refer to `app/config/config.py` for more configuration details.
 
