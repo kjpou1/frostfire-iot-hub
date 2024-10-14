@@ -18,6 +18,7 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
     - [Usage](#usage)
   - [Sample `publisher.py`](#sample-publisherpy)
   - [Sample `subscriber.py`](#sample-subscriberpy)
+  - [Plugin Architecture](#plugin-architecture)
   - [Testing API with API Key and Authorization](#testing-api-with-api-key-and-authorization)
     - [**API Key Authentication Example**](#api-key-authentication-example)
       - [Example POST Request:](#example-post-request)
@@ -51,10 +52,12 @@ Frostfire IoT Hub is an advanced and scalable IoT hub designed to facilitate rel
 
 ## Features
 
-- **Efficient Data Handling:** Optimized for resource-constrained environments.
-- **Reliable Messaging:** Uses MQTT protocol for reliable and efficient communication.
-- **Scalable Architecture:** Supports multiple devices and scalable message handling.
-- **Configurable:** Easy to configure via environment variables.
+- **Efficient Data Handling**: Optimized for resource-constrained environments.
+- **Reliable Messaging**: Uses MQTT protocol for reliable and efficient communication.
+- **Scalable Architecture**: Supports multiple devices and scalable message handling.
+- **Configurable**: Easy to configure via environment variables.
+- **Plugin-Based Extensibility**: The Frostfire IoT Hub is built with a flexible **plugin architecture**, allowing users to define and load plugins dynamically. This modular structure ensures that new device types and behaviors can be added without altering the core functionality of the hub. For more details, refer to the [Plugin Architecture Documentation](app/plugins/readme.md).
+- **Message Security**: The hub supports **secure message handling** using API key and token-based authentication mechanisms. API keys and bearer tokens can be used for authentication via headers (`x-api-key`, `Authorization`), as well as Amazon-specific requests (`x_amz_mqtt5_user_properties`). These security measures ensure that only authorized clients can publish or subscribe to topics, protecting your IoT communication from unauthorized access.
 
 ## Getting Started
 
@@ -311,6 +314,16 @@ if __name__ == "__main__":
     main()
 
 ```
+
+## Plugin Architecture
+
+The **Frostfire IoT Hub** is designed to be modular and extensible, enabling dynamic loading of plugins to handle various IoT device interactions. The plugin system allows users to define device-specific behaviors in separate modules that adhere to a common interface. This architecture ensures that the IoT Hub can be easily extended and adapted without changing its core functionality.
+
+- **Modular Structure**: Plugins are stored in the `/plugins` directory and can either be standalone Python files or submodules with additional services.
+- **Dynamic Loading**: Plugins are loaded at runtime, allowing them to subscribe to MQTT topics and process messages.
+- **Interface-Based**: Each plugin implements the `IotPlugin` interface, ensuring consistency in how plugins initialize, handle topics, and process messages.
+
+For detailed information on how to create, structure, and load plugins, please refer to the [Plugin Architecture Documentation](app/plugins/readme.md).
 
 ## Testing API with API Key and Authorization
 
